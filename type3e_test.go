@@ -35,3 +35,25 @@ func TestEncodeValue(t *testing.T) {
 	assert.NoError(t, e)
 	assert.Equal(t, []byte("0012D687"), b)
 }
+
+func TestDecodeValue(t *testing.T) {
+	t3e := factory.New[type3E]()
+	var int16v int16
+	e := t3e.decodeValue([]byte{0xd2, 0x04}, &int16v)
+	assert.NoError(t, e)
+	assert.Equal(t, int16(1234), int16v)
+
+	var int32v int32
+	e = t3e.decodeValue([]byte{0x87, 0xd6, 0x12, 0x00}, &int32v)
+	assert.NoError(t, e)
+	assert.Equal(t, int32(1234567), int32v)
+
+	t3e.commType = CommTypeAscii
+	e = t3e.decodeValue([]byte("04D2"), &int16v)
+	assert.NoError(t, e)
+	assert.Equal(t, int16(1234), int16v)
+
+	e = t3e.decodeValue([]byte("0012D687"), &int32v)
+	assert.NoError(t, e)
+	assert.Equal(t, int32(1234567), int32v)
+}

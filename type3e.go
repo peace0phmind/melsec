@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"reflect"
+	"strconv"
 )
 
 type type3E struct {
@@ -35,7 +36,7 @@ func (t *type3E) encodeValue(value any) ([]byte, error) {
 			valueByte = make([]byte, 4)
 			binary.LittleEndian.PutUint32(valueByte, v)
 		default:
-			return nil, fmt.Errorf("unsupported value type: %v", reflect.TypeOf(value))
+			return nil, fmt.Errorf("encode unsupported value type: %v", reflect.TypeOf(value))
 		}
 	} else {
 		switch v := value.(type) {
@@ -46,11 +47,59 @@ func (t *type3E) encodeValue(value any) ([]byte, error) {
 		case int32, uint32:
 			valueByte = []byte(fmt.Sprintf("%08X", value))
 		default:
-			return nil, fmt.Errorf("unsupported value type: %v", reflect.TypeOf(value))
+			return nil, fmt.Errorf("encode unsupported value type: %v", reflect.TypeOf(value))
 		}
 	}
 
 	return valueByte, nil
+}
+
+func (t *type3E) decodeValue(buf []byte, value any) error {
+	if t.commType == CommTypeBinary {
+		switch v := value.(type) {
+		case *int16:
+			*v = int16(binary.LittleEndian.Uint16(buf))
+		case *uint16:
+			*v = binary.LittleEndian.Uint16(buf)
+		case *int32:
+			*v = int32(binary.LittleEndian.Uint32(buf))
+		case *uint32:
+			*v = binary.LittleEndian.Uint32(buf)
+		default:
+			return fmt.Errorf("decode unsupported value type: %v", reflect.TypeOf(value))
+		}
+	} else {
+		switch v := value.(type) {
+		case *int16:
+			if ret, err := strconv.ParseInt(string(buf), 16, 16); err != nil {
+				return err
+			} else {
+				*v = int16(ret)
+			}
+		case *uint16:
+			if ret, err := strconv.ParseUint(string(buf), 16, 16); err != nil {
+				return err
+			} else {
+				*v = uint16(ret)
+			}
+		case *int32:
+			if ret, err := strconv.ParseInt(string(buf), 16, 32); err != nil {
+				return err
+			} else {
+				*v = int32(ret)
+			}
+		case *uint32:
+			if ret, err := strconv.ParseUint(string(buf), 16, 32); err != nil {
+				return err
+			} else {
+				*v = uint32(ret)
+			}
+		default:
+			return fmt.Errorf("decode unsupported value type: %v", reflect.TypeOf(value))
+		}
+	}
+
+	return nil
 }
 
 func (t *type3E) BatchReadBits(device Device, address int, readSize int) {
