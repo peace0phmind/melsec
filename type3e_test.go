@@ -112,3 +112,13 @@ func TestMakeDeviceData(t *testing.T) {
 	assert.NoError(t, e)
 	assert.Equal(t, []byte("TS**00001234"), buf)
 }
+
+func TestMakeSendData(t *testing.T) {
+	t3e := factory.New[type3E]()
+	buf := t3e.makeSendData([]byte("py"))
+	assert.Equal(t, []byte{0x50, 0x00, 0x00, 0xff, 0xff, 0x03, 0x00, 0x04, 0x00, 0x04, 0x00, 0x70, 0x79}, buf)
+
+	t3e.commType = CommTypeAscii
+	buf = t3e.makeSendData([]byte("py"))
+	assert.Equal(t, []byte("500000FF03FF0000060004py"), buf)
+}

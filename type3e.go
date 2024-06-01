@@ -10,8 +10,14 @@ import (
 )
 
 type type3E struct {
-	plcType  PlcType  `value:"QnA"`
-	commType CommType `value:"binary"`
+	plcType       PlcType  `value:"QnA"`
+	commType      CommType `value:"binary"`
+	subheader     uint16   `value:"0x5000"`
+	network       byte     `value:"0"`
+	pc            byte     `value:"0xFF"`
+	destModuleIo  uint16   `value:"0x3FF"`
+	destModuleSta byte     `value:"0x0"`
+	timer         uint16   `value:"4"`
 }
 
 func (t *type3E) writeValue(w io.Writer, value any) error {
@@ -149,7 +155,28 @@ func (t *type3E) makeDeviceData(device Device, address int) ([]byte, error) {
 	}
 }
 
-func (t *type3E) BatchReadBits(device Device, address int, readSize int) error {
+func (t *type3E) makeSendData(buf []byte) []byte {
+	var data bytes.Buffer
+	if t.commType == CommTypeBinary {
+		_ = binary.Write(&data, binary.BigEndian, t.subheader)
+	} else {
+		data.Write([]byte(fmt.Sprintf("%x", t.subheader)))
+	}
+
+	_ = t.writeValue(&data, t.network)
+	_ = t.writeValue(&data, t.pc)
+	_ = t.writeValue(&data, t.destModuleIo)
+	_ = t.writeValue(&data, t.destModuleSta)
+	// add self.timer size
+	_ = t.writeValue(&data, t.commType.WordSize()+uint16(len(buf)))
+	_ = t.writeValue(&data, t.timer)
+
+	data.Write(buf)
+
+	return data.Bytes()
+}
+
+func (t *type3E) BatchReadBits(device Device, address int, readSize int16) error {
 	command := int16(0x0401)
 	var subCommand int16
 	if t.plcType == PlcTypeIQr {
@@ -162,8 +189,21 @@ func (t *type3E) BatchReadBits(device Device, address int, readSize int) error {
 	if err := t.writeCommandData(&requestData, command, subCommand); err != nil {
 		return err
 	}
+
+	if buf, err := t.makeDeviceData(device, address); err != nil {
+		return err
+	} else {
+		if _, err = requestData.Write(buf); err != nil {
+			return err
+		}
+	}
+
+	// write read size
+	if err := t.writeValue(&requestData, readSize); err != nil {
+		return err
+	}
+
 	return nil
-	//requestData = append(requestData, handler.MakeDeviceData(headDevice)...)
 	//requestData = append(requestData, handler.EncodeValue(readSize)...)
 	//sendData := handler.MakeSendData(requestData.Bytes())
 	//

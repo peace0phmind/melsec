@@ -18,9 +18,9 @@ type PlcType int
 /*
 CommType : communication type
 
-	@Enum {
-		BINARY
-		ASCII
+	@Enum(wordSize uint16) {
+		BINARY(2)
+		ASCII(4)
 	}
 */
 type CommType string

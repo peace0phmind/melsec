@@ -102,6 +102,19 @@ func (x CommType) Name() string {
 	return fmt.Sprintf("CommType(%s).Name", string(x))
 }
 
+var _CommTypeMapWordSize = map[CommType]uint16{
+	CommTypeBinary: 2,
+	CommTypeAscii:  4,
+}
+
+// WordSize is the attribute of CommType.
+func (x CommType) WordSize() uint16 {
+	if v, ok := _CommTypeMapWordSize[x]; ok {
+		return v
+	}
+	return 0
+}
+
 // Val is the attribute of CommType.
 func (x CommType) Val() string {
 	return string(x)
