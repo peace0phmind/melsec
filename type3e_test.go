@@ -57,3 +57,58 @@ func TestDecodeValue(t *testing.T) {
 	assert.NoError(t, e)
 	assert.Equal(t, int32(1234567), int32v)
 }
+
+func TestMakeDeviceData(t *testing.T) {
+	t3e := factory.New[type3E]()
+	buf, e := t3e.makeDeviceData(DeviceD, 1000)
+	assert.NoError(t, e)
+	assert.Equal(t, []byte{0xe8, 0x03, 0x00, 0xa8}, buf)
+
+	buf, e = t3e.makeDeviceData(DeviceX, 17)
+	assert.NoError(t, e)
+	assert.Equal(t, []byte{0x11, 0x00, 0x00, 0x9c}, buf)
+
+	buf, e = t3e.makeDeviceData(DeviceTs, 1234)
+	assert.NoError(t, e)
+	assert.Equal(t, []byte{0xd2, 0x04, 0x00, 0xc1}, buf)
+
+	t3e.commType = CommTypeAscii
+	buf, e = t3e.makeDeviceData(DeviceD, 1000)
+	assert.NoError(t, e)
+	assert.Equal(t, []byte("D*001000"), buf)
+
+	buf, e = t3e.makeDeviceData(DeviceX, 17)
+	assert.NoError(t, e)
+	assert.Equal(t, []byte("X*000017"), buf)
+
+	buf, e = t3e.makeDeviceData(DeviceTs, 1234)
+	assert.NoError(t, e)
+	assert.Equal(t, []byte("TS001234"), buf)
+
+	t3e = factory.New[type3E]()
+	t3e.plcType = PlcTypeIQr
+	buf, e = t3e.makeDeviceData(DeviceD, 1000)
+	assert.NoError(t, e)
+	assert.Equal(t, []byte{0xe8, 0x03, 0x00, 0x00, 0xa8, 0x00}, buf)
+
+	buf, e = t3e.makeDeviceData(DeviceX, 17)
+	assert.NoError(t, e)
+	assert.Equal(t, []byte{0x11, 0x00, 0x00, 0x00, 0x9c, 0x00}, buf)
+
+	buf, e = t3e.makeDeviceData(DeviceTs, 1234)
+	assert.NoError(t, e)
+	assert.Equal(t, []byte{0xd2, 0x04, 0x00, 0x00, 0xc1, 0x00}, buf)
+
+	t3e.commType = CommTypeAscii
+	buf, e = t3e.makeDeviceData(DeviceD, 1000)
+	assert.NoError(t, e)
+	assert.Equal(t, []byte("D***00001000"), buf)
+
+	buf, e = t3e.makeDeviceData(DeviceX, 17)
+	assert.NoError(t, e)
+	assert.Equal(t, []byte("X***00000017"), buf)
+
+	buf, e = t3e.makeDeviceData(DeviceTs, 1234)
+	assert.NoError(t, e)
+	assert.Equal(t, []byte("TS**00001234"), buf)
+}

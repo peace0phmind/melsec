@@ -1,14 +1,16 @@
 package melsec
 
+import "strings"
+
 /*
 PlcType : PLC type. "Q", "L", "QnA", "iQ-L", "iQ-R",
 
-	@Enum(name string){
-		Q("Q")
-		L("L")
-		QnA("QnA")
-		iQL("iQ-L")
-		iQR("iQ-R")
+	@Enum(name string, numFmt string){
+		Q("Q", "%06d")
+		L("L", "%06d")
+		QnA("QnA", "%06d")
+		iQL("iQ-L", "%06d")
+		iQR("iQ-R", "%08d")
 	}
 */
 type PlcType int
@@ -56,3 +58,11 @@ Device : protocol deveice
 	}
 */
 type Device int
+
+func (d Device) GetAsciiCode(plcType PlcType) []byte {
+	if plcType == PlcTypeIQr {
+		return []byte(d.Name() + strings.Repeat("*", 4-len(d.Name())))
+	} else {
+		return []byte(d.Name() + strings.Repeat("*", 2-len(d.Name())))
+	}
+}

@@ -1,8 +1,10 @@
 package melsec
 
 import (
+	"bytes"
 	"encoding/binary"
 	"fmt"
+	"io"
 	"reflect"
 	"strconv"
 )
@@ -10,6 +12,17 @@ import (
 type type3E struct {
 	plcType  PlcType  `value:"QnA"`
 	commType CommType `value:"binary"`
+}
+
+func (t *type3E) writeValue(w io.Writer, value any) error {
+	if buf, err := t.encodeValue(value); err != nil {
+		return err
+	} else {
+		if _, err = w.Write(buf); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (t *type3E) encodeValue(value any) ([]byte, error) {
@@ -102,18 +115,54 @@ func (t *type3E) decodeValue(buf []byte, value any) error {
 	return nil
 }
 
-func (t *type3E) BatchReadBits(device Device, address int, readSize int) {
-	//command := 0x0401
-	//var subCommand int
-	//if t.plcType == PlcTypeIQr {
-	//	subCommand = 0x0003
-	//} else {
-	//	subCommand = 0x0001
-	//}
-	//
-	//var requestData bytes.Buffer
-	//
-	//requestData = append(requestData, handler.MakeCommandData(command, subCommand)...)
+func (t *type3E) writeCommandData(w io.Writer, command, subCommand int16) error {
+	if err := t.writeValue(w, command); err != nil {
+		return err
+	} else {
+		return t.writeValue(w, subCommand)
+	}
+}
+
+func (t *type3E) makeDeviceData(device Device, address int) ([]byte, error) {
+	if t.commType == CommTypeBinary {
+		buf, err := t.encodeValue(int32(address))
+		if err != nil {
+			return nil, err
+		}
+
+		if t.plcType != PlcTypeIQr {
+			buf = buf[:3]
+		}
+
+		buf = append(buf, byte(device.Code()))
+		if t.plcType == PlcTypeIQr {
+			buf = append(buf, 0x0)
+		}
+
+		return buf, nil
+	} else {
+		buf := device.GetAsciiCode(t.plcType)
+		tt := fmt.Sprintf(t.plcType.NumFmt(), address)
+		buf = append(buf, []byte(tt)...)
+
+		return buf, nil
+	}
+}
+
+func (t *type3E) BatchReadBits(device Device, address int, readSize int) error {
+	command := int16(0x0401)
+	var subCommand int16
+	if t.plcType == PlcTypeIQr {
+		subCommand = 0x0003
+	} else {
+		subCommand = 0x0001
+	}
+
+	var requestData bytes.Buffer
+	if err := t.writeCommandData(&requestData, command, subCommand); err != nil {
+		return err
+	}
+	return nil
 	//requestData = append(requestData, handler.MakeDeviceData(headDevice)...)
 	//requestData = append(requestData, handler.EncodeValue(readSize)...)
 	//sendData := handler.MakeSendData(requestData.Bytes())

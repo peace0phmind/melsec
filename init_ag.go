@@ -341,6 +341,22 @@ func (x PlcType) Name() string {
 	return fmt.Sprintf("PlcType(%d).Name", x)
 }
 
+var _PlcTypeMapNumFmt = map[PlcType]string{
+	PlcTypeQ:   "%06d",
+	PlcTypeL:   "%06d",
+	PlcTypeQnA: "%06d",
+	PlcTypeIQl: "%06d",
+	PlcTypeIQr: "%08d",
+}
+
+// NumFmt is the attribute of PlcType.
+func (x PlcType) NumFmt() string {
+	if v, ok := _PlcTypeMapNumFmt[x]; ok {
+		return v
+	}
+	return fmt.Sprintf("PlcType(%d).NumFmt", x)
+}
+
 // Val is the attribute of PlcType.
 func (x PlcType) Val() int {
 	return int(x)
