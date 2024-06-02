@@ -122,6 +122,19 @@ const (
 	PlcTypeIQr
 )
 
+const (
+	// TcpStateUnknown is a TcpState of type Unknown.
+	TcpStateUnknown TcpState = iota
+	// TcpStateConnecting is a TcpState of type Connecting.
+	TcpStateConnecting
+	// TcpStateConnected is a TcpState of type Connected.
+	TcpStateConnected
+	// TcpStateDisconnected is a TcpState of type Disconnected.
+	TcpStateDisconnected
+	// TcpStateConnectClosed is a TcpState of type ConnectClosed.
+	TcpStateConnectClosed
+)
+
 var ErrInvalidCommType = errors.New("not a valid CommType")
 
 var _CommTypeNameMap = map[string]CommType{
@@ -624,6 +637,82 @@ func (x PlcType) MarshalText() ([]byte, error) {
 // UnmarshalText implements the text unmarshaller method.
 func (x *PlcType) UnmarshalText(text []byte) error {
 	val, err := ParsePlcType(string(text))
+	if err != nil {
+		return err
+	}
+	*x = val
+	return nil
+}
+
+var ErrInvalidTcpState = errors.New("not a valid TcpState")
+
+var _TcpStateName = "UnknownConnectingConnectedDisconnectedConnectClosed"
+
+var _TcpStateMapName = map[TcpState]string{
+	TcpStateUnknown:       _TcpStateName[0:7],
+	TcpStateConnecting:    _TcpStateName[7:17],
+	TcpStateConnected:     _TcpStateName[17:26],
+	TcpStateDisconnected:  _TcpStateName[26:38],
+	TcpStateConnectClosed: _TcpStateName[38:51],
+}
+
+// Name is the attribute of TcpState.
+func (x TcpState) Name() string {
+	if v, ok := _TcpStateMapName[x]; ok {
+		return v
+	}
+	return fmt.Sprintf("TcpState(%d).Name", x)
+}
+
+// Val is the attribute of TcpState.
+func (x TcpState) Val() int {
+	return int(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x TcpState) IsValid() bool {
+	_, ok := _TcpStateMapName[x]
+	return ok
+}
+
+// String implements the Stringer interface.
+func (x TcpState) String() string {
+	return x.Name()
+}
+
+var _TcpStateNameMap = map[string]TcpState{
+	_TcpStateName[0:7]:                    TcpStateUnknown,
+	strings.ToLower(_TcpStateName[0:7]):   TcpStateUnknown,
+	_TcpStateName[7:17]:                   TcpStateConnecting,
+	strings.ToLower(_TcpStateName[7:17]):  TcpStateConnecting,
+	_TcpStateName[17:26]:                  TcpStateConnected,
+	strings.ToLower(_TcpStateName[17:26]): TcpStateConnected,
+	_TcpStateName[26:38]:                  TcpStateDisconnected,
+	strings.ToLower(_TcpStateName[26:38]): TcpStateDisconnected,
+	_TcpStateName[38:51]:                  TcpStateConnectClosed,
+	strings.ToLower(_TcpStateName[38:51]): TcpStateConnectClosed,
+}
+
+// ParseTcpState converts a string to a TcpState.
+func ParseTcpState(value string) (TcpState, error) {
+	if x, ok := _TcpStateNameMap[value]; ok {
+		return x, nil
+	}
+	if x, ok := _TcpStateNameMap[strings.ToLower(value)]; ok {
+		return x, nil
+	}
+	return TcpState(0), fmt.Errorf("%s is %w", value, ErrInvalidTcpState)
+}
+
+// MarshalText implements the text marshaller method.
+func (x TcpState) MarshalText() ([]byte, error) {
+	return []byte(x.String()), nil
+}
+
+// UnmarshalText implements the text unmarshaller method.
+func (x *TcpState) UnmarshalText(text []byte) error {
+	val, err := ParseTcpState(string(text))
 	if err != nil {
 		return err
 	}

@@ -10,6 +10,7 @@ import (
 )
 
 type type3E struct {
+	handler       *transporter
 	plcType       PlcType  `value:"QnA"`
 	commType      CommType `value:"binary"`
 	subheader     uint16   `value:"0x5000"`
@@ -255,6 +256,6 @@ func (t *type3E) BatchReadBits(device Device, address int, readSize int16) error
 	//return bitValues, nil
 }
 
-func (t *type3E) BatchReadWords(device Device, address int, readSize int) {
-
+func (t *type3E) BatchReadWords(device Device, address int, readSize int16) error {
+	return nil
 }

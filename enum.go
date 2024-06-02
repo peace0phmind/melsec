@@ -104,3 +104,16 @@ func (d Device) GetAsciiCode(plcType PlcType) []byte {
 		return []byte(d.Name() + strings.Repeat("*", 2-len(d.Name())))
 	}
 }
+
+/*
+TcpState : tcp state
+
+	@Enum {
+		Unknown
+		Connecting
+		Connected
+		Disconnected
+		ConnectClosed
+	}
+*/
+type TcpState int
