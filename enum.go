@@ -13,7 +13,6 @@ Command : command code
 		BatchReadWords   (0x0401, 0x0000)
 		BatchReadBits    (0x0401, 0x0001)
 		RandomReadWords  (0x0403, 0x0000)
-		RandomReadBits   (0x0403, 0x0001)
 		RemoteRun   	 (0x1001, 0x0000)
 		RemoteStop  	 (0x1002, 0x0000)
 		RemotePause 	 (0x1003, 0x0000)
@@ -35,7 +34,7 @@ func (c Command) SubCommand(plcType PlcType) uint16 {
 		switch c {
 		case CommandBatchReadWords, CommandBatchWriteWords, CommandRandomReadWords, CommandRandomWriteWords:
 			return 0x0002
-		case CommandBatchReadBits, CommandBatchWriteBits, CommandRandomReadBits, CommandRandomWriteBits:
+		case CommandBatchReadBits, CommandBatchWriteBits, CommandRandomWriteBits:
 			return 0x0003
 		}
 	}
