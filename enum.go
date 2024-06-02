@@ -69,32 +69,32 @@ type CommType string
 Device : protocol deveice
 
 	@Enum(code int) {
-		SM(0x91)
-		SD(0xA9)
-		X(0x9C)
-		Y(0x9D)
-		M(0x90)
-		L(0x92)
-		F(0x93)
-		V(0x94)
-		B(0xA0)
-		D(0xA8)
-		W(0xB4)
-		TS(0xC1)
-		TC(0xC0)
-		TN(0xC2)
-		SS(0xC7)
-		SC(0xC6)
-		SN(0xC8)
-		CS(0xC4)
-		CC(0xC3)
-		CN(0xC5)
-		SB(0xA1)
-		SW(0xB5)
-		DX(0xA2)
-		DY(0xA3)
-		R(0xAF)
-		ZR(0xB0)
+		SM(0x91)  	// 特殊继电器, bit, 10
+		SD(0xA9)	// 特殊寄存器, word, 10
+		X(0x9C)		// 输入, bit, 16
+		Y(0x9D)		// 输出, bit, 16
+		M(0x90)		// 内部继电器, bit, 10
+		L(0x92)		// 锁存继电器, bit, 10
+		F(0x93)		// 报警器, bit, 10
+		V(0x94)		// 变址继电器, bit, 10
+		B(0xA0)		// 链接继电器, bit, 16
+		D(0xA8)		// 数据寄存器, word, 10
+		W(0xB4)		// 链接寄存器, word, 16
+		TS(0xC1)	// 定时器, 触点 bit, 10
+		TC(0xC0)	// 定时器, 线圈 bit, 10
+		TN(0xC2)	// 定时器当前值 word, 10
+		SS(0xC7)	// 累计定时器, 触点 bit, 10
+		SC(0xC6)	// 累计定时器, 线圈 bit, 10
+		SN(0xC8)	// 累计定时器当前值 word, 10
+		CS(0xC4)	// 计数器, 触点 bit, 10
+		CC(0xC3)	// 计数器, 线圈 bit, 10
+		CN(0xC5)	// 计数器当前值 word, 10
+		SB(0xA1)	// 链接特殊继电器 bit, 16
+		SW(0xB5)	// 链接特殊寄存器 word, 16
+		DX(0xA2)	// 直接访问输入 bit, 16
+		DY(0xA3)	// 直接访问输出 bit, 16
+		R(0xAF)		// 文件寄存器, 块切换方式 word, 10
+		ZR(0xB0)	// 文件寄存器, 连号访问方式 word, 16
 	}
 */
 type Device int
