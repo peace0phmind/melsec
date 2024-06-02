@@ -18,6 +18,43 @@ const (
 )
 
 const (
+	// CommandReadCpuType is a Command of type ReadCpuType.
+	CommandReadCpuType Command = iota
+	// CommandBatchReadWords is a Command of type BatchReadWords.
+	CommandBatchReadWords
+	// CommandBatchReadBits is a Command of type BatchReadBits.
+	CommandBatchReadBits
+	// CommandRandomReadWords is a Command of type RandomReadWords.
+	CommandRandomReadWords
+	// CommandRandomReadBits is a Command of type RandomReadBits.
+	CommandRandomReadBits
+	// CommandRemoteRun is a Command of type RemoteRun.
+	CommandRemoteRun
+	// CommandRemoteStop is a Command of type RemoteStop.
+	CommandRemoteStop
+	// CommandRemotePause is a Command of type RemotePause.
+	CommandRemotePause
+	// CommandRemoteLatchClear is a Command of type RemoteLatchClear.
+	CommandRemoteLatchClear
+	// CommandRemoteReset is a Command of type RemoteReset.
+	CommandRemoteReset
+	// CommandBatchWriteWords is a Command of type BatchWriteWords.
+	CommandBatchWriteWords
+	// CommandBatchWriteBits is a Command of type BatchWriteBits.
+	CommandBatchWriteBits
+	// CommandRandomWriteWords is a Command of type RandomWriteWords.
+	CommandRandomWriteWords
+	// CommandRandomWriteBits is a Command of type RandomWriteBits.
+	CommandRandomWriteBits
+	// CommandRemoteUnlock is a Command of type RemoteUnlock.
+	CommandRemoteUnlock
+	// CommandRemoteLock is a Command of type RemoteLock.
+	CommandRemoteLock
+	// CommandEchoTest is a Command of type EchoTest.
+	CommandEchoTest
+)
+
+const (
 	// DeviceSm is a Device of type SM.
 	DeviceSm Device = iota
 	// DeviceSd is a Device of type SD.
@@ -151,6 +188,174 @@ func (x CommType) MarshalText() ([]byte, error) {
 // UnmarshalText implements the text unmarshaller method.
 func (x *CommType) UnmarshalText(text []byte) error {
 	val, err := ParseCommType(string(text))
+	if err != nil {
+		return err
+	}
+	*x = val
+	return nil
+}
+
+var ErrInvalidCommand = errors.New("not a valid Command")
+
+var _CommandName = "ReadCpuTypeBatchReadWordsBatchReadBitsRandomReadWordsRandomReadBitsRemoteRunRemoteStopRemotePauseRemoteLatchClearRemoteResetBatchWriteWordsBatchWriteBitsRandomWriteWordsRandomWriteBitsRemoteUnlockRemoteLockEchoTest"
+
+var _CommandMapName = map[Command]string{
+	CommandReadCpuType:      _CommandName[0:11],
+	CommandBatchReadWords:   _CommandName[11:25],
+	CommandBatchReadBits:    _CommandName[25:38],
+	CommandRandomReadWords:  _CommandName[38:53],
+	CommandRandomReadBits:   _CommandName[53:67],
+	CommandRemoteRun:        _CommandName[67:76],
+	CommandRemoteStop:       _CommandName[76:86],
+	CommandRemotePause:      _CommandName[86:97],
+	CommandRemoteLatchClear: _CommandName[97:113],
+	CommandRemoteReset:      _CommandName[113:124],
+	CommandBatchWriteWords:  _CommandName[124:139],
+	CommandBatchWriteBits:   _CommandName[139:153],
+	CommandRandomWriteWords: _CommandName[153:169],
+	CommandRandomWriteBits:  _CommandName[169:184],
+	CommandRemoteUnlock:     _CommandName[184:196],
+	CommandRemoteLock:       _CommandName[196:206],
+	CommandEchoTest:         _CommandName[206:214],
+}
+
+// Name is the attribute of Command.
+func (x Command) Name() string {
+	if v, ok := _CommandMapName[x]; ok {
+		return v
+	}
+	return fmt.Sprintf("Command(%d).Name", x)
+}
+
+var _CommandMapCommand = map[Command]int16{
+	CommandReadCpuType:      257,
+	CommandBatchReadWords:   1025,
+	CommandBatchReadBits:    1025,
+	CommandRandomReadWords:  1027,
+	CommandRandomReadBits:   1027,
+	CommandRemoteRun:        4097,
+	CommandRemoteStop:       4098,
+	CommandRemotePause:      4099,
+	CommandRemoteLatchClear: 4101,
+	CommandRemoteReset:      4102,
+	CommandBatchWriteWords:  5121,
+	CommandBatchWriteBits:   5121,
+	CommandRandomWriteWords: 5122,
+	CommandRandomWriteBits:  5122,
+	CommandRemoteUnlock:     5680,
+	CommandRemoteLock:       5681,
+	CommandEchoTest:         1561,
+}
+
+// Command is the attribute of Command.
+func (x Command) Command() int16 {
+	if v, ok := _CommandMapCommand[x]; ok {
+		return v
+	}
+	return 0
+}
+
+var _CommandMapDefaultSubCommand = map[Command]int16{
+	CommandReadCpuType:      0,
+	CommandBatchReadWords:   0,
+	CommandBatchReadBits:    1,
+	CommandRandomReadWords:  0,
+	CommandRandomReadBits:   1,
+	CommandRemoteRun:        0,
+	CommandRemoteStop:       0,
+	CommandRemotePause:      0,
+	CommandRemoteLatchClear: 0,
+	CommandRemoteReset:      0,
+	CommandBatchWriteWords:  0,
+	CommandBatchWriteBits:   1,
+	CommandRandomWriteWords: 0,
+	CommandRandomWriteBits:  1,
+	CommandRemoteUnlock:     0,
+	CommandRemoteLock:       0,
+	CommandEchoTest:         0,
+}
+
+// DefaultSubCommand is the attribute of Command.
+func (x Command) DefaultSubCommand() int16 {
+	if v, ok := _CommandMapDefaultSubCommand[x]; ok {
+		return v
+	}
+	return 0
+}
+
+// Val is the attribute of Command.
+func (x Command) Val() int16 {
+	return int16(x)
+}
+
+// IsValid provides a quick way to determine if the typed value is
+// part of the allowed enumerated values
+func (x Command) IsValid() bool {
+	_, ok := _CommandMapName[x]
+	return ok
+}
+
+// String implements the Stringer interface.
+func (x Command) String() string {
+	return x.Name()
+}
+
+var _CommandNameMap = map[string]Command{
+	_CommandName[0:11]:                     CommandReadCpuType,
+	strings.ToLower(_CommandName[0:11]):    CommandReadCpuType,
+	_CommandName[11:25]:                    CommandBatchReadWords,
+	strings.ToLower(_CommandName[11:25]):   CommandBatchReadWords,
+	_CommandName[25:38]:                    CommandBatchReadBits,
+	strings.ToLower(_CommandName[25:38]):   CommandBatchReadBits,
+	_CommandName[38:53]:                    CommandRandomReadWords,
+	strings.ToLower(_CommandName[38:53]):   CommandRandomReadWords,
+	_CommandName[53:67]:                    CommandRandomReadBits,
+	strings.ToLower(_CommandName[53:67]):   CommandRandomReadBits,
+	_CommandName[67:76]:                    CommandRemoteRun,
+	strings.ToLower(_CommandName[67:76]):   CommandRemoteRun,
+	_CommandName[76:86]:                    CommandRemoteStop,
+	strings.ToLower(_CommandName[76:86]):   CommandRemoteStop,
+	_CommandName[86:97]:                    CommandRemotePause,
+	strings.ToLower(_CommandName[86:97]):   CommandRemotePause,
+	_CommandName[97:113]:                   CommandRemoteLatchClear,
+	strings.ToLower(_CommandName[97:113]):  CommandRemoteLatchClear,
+	_CommandName[113:124]:                  CommandRemoteReset,
+	strings.ToLower(_CommandName[113:124]): CommandRemoteReset,
+	_CommandName[124:139]:                  CommandBatchWriteWords,
+	strings.ToLower(_CommandName[124:139]): CommandBatchWriteWords,
+	_CommandName[139:153]:                  CommandBatchWriteBits,
+	strings.ToLower(_CommandName[139:153]): CommandBatchWriteBits,
+	_CommandName[153:169]:                  CommandRandomWriteWords,
+	strings.ToLower(_CommandName[153:169]): CommandRandomWriteWords,
+	_CommandName[169:184]:                  CommandRandomWriteBits,
+	strings.ToLower(_CommandName[169:184]): CommandRandomWriteBits,
+	_CommandName[184:196]:                  CommandRemoteUnlock,
+	strings.ToLower(_CommandName[184:196]): CommandRemoteUnlock,
+	_CommandName[196:206]:                  CommandRemoteLock,
+	strings.ToLower(_CommandName[196:206]): CommandRemoteLock,
+	_CommandName[206:214]:                  CommandEchoTest,
+	strings.ToLower(_CommandName[206:214]): CommandEchoTest,
+}
+
+// ParseCommand converts a string to a Command.
+func ParseCommand(value string) (Command, error) {
+	if x, ok := _CommandNameMap[value]; ok {
+		return x, nil
+	}
+	if x, ok := _CommandNameMap[strings.ToLower(value)]; ok {
+		return x, nil
+	}
+	return Command(0), fmt.Errorf("%s is %w", value, ErrInvalidCommand)
+}
+
+// MarshalText implements the text marshaller method.
+func (x Command) MarshalText() ([]byte, error) {
+	return []byte(x.String()), nil
+}
+
+// UnmarshalText implements the text unmarshaller method.
+func (x *Command) UnmarshalText(text []byte) error {
+	val, err := ParseCommand(string(text))
 	if err != nil {
 		return err
 	}

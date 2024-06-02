@@ -176,32 +176,31 @@ func (t *type3E) makeSendData(buf []byte) []byte {
 	return data.Bytes()
 }
 
-func (t *type3E) BatchReadBits(device Device, address int, readSize int16) error {
-	command := int16(0x0401)
-	var subCommand int16
-	if t.plcType == PlcTypeIQr {
-		subCommand = 0x0003
-	} else {
-		subCommand = 0x0001
-	}
-
+func (t *type3E) makeSendDataByCmd(cmd Command, device Device, address int, readSize int16) ([]byte, error) {
 	var requestData bytes.Buffer
-	if err := t.writeCommandData(&requestData, command, subCommand); err != nil {
-		return err
+	if err := t.writeCommandData(&requestData, cmd.Command(), cmd.SubCommand(t.plcType)); err != nil {
+		return nil, err
 	}
 
 	if buf, err := t.makeDeviceData(device, address); err != nil {
-		return err
+		return nil, err
 	} else {
 		if _, err = requestData.Write(buf); err != nil {
-			return err
+			return nil, err
 		}
 	}
 
 	// write read size
 	if err := t.writeValue(&requestData, readSize); err != nil {
-		return err
+		return nil, err
 	}
+
+	data := t.makeSendData(requestData.Bytes())
+	return data, nil
+}
+
+func (t *type3E) BatchReadBits(device Device, address int, readSize int16) error {
+	t.makeSendDataByCmd(CommandBatchReadBits, device, address, readSize)
 
 	return nil
 	//requestData = append(requestData, handler.EncodeValue(readSize)...)
