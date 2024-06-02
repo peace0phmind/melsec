@@ -165,6 +165,32 @@ func (x CommType) WordSize() uint16 {
 	return 0
 }
 
+var _CommTypeMapAnswerStatus = map[CommType]uint16{
+	CommTypeBinary: 9,
+	CommTypeAscii:  18,
+}
+
+// AnswerStatus is the attribute of CommType.
+func (x CommType) AnswerStatus() uint16 {
+	if v, ok := _CommTypeMapAnswerStatus[x]; ok {
+		return v
+	}
+	return 0
+}
+
+var _CommTypeMapAnswerData = map[CommType]uint16{
+	CommTypeBinary: 11,
+	CommTypeAscii:  22,
+}
+
+// AnswerData is the attribute of CommType.
+func (x CommType) AnswerData() uint16 {
+	if v, ok := _CommTypeMapAnswerData[x]; ok {
+		return v
+	}
+	return 0
+}
+
 // Val is the attribute of CommType.
 func (x CommType) Val() string {
 	return string(x)
@@ -240,7 +266,7 @@ func (x Command) Name() string {
 	return fmt.Sprintf("Command(%d).Name", x)
 }
 
-var _CommandMapCommand = map[Command]int16{
+var _CommandMapCommand = map[Command]uint16{
 	CommandReadCpuType:      257,
 	CommandBatchReadWords:   1025,
 	CommandBatchReadBits:    1025,
@@ -261,14 +287,14 @@ var _CommandMapCommand = map[Command]int16{
 }
 
 // Command is the attribute of Command.
-func (x Command) Command() int16 {
+func (x Command) Command() uint16 {
 	if v, ok := _CommandMapCommand[x]; ok {
 		return v
 	}
 	return 0
 }
 
-var _CommandMapDefaultSubCommand = map[Command]int16{
+var _CommandMapDefaultSubCommand = map[Command]uint16{
 	CommandReadCpuType:      0,
 	CommandBatchReadWords:   0,
 	CommandBatchReadBits:    1,
@@ -289,7 +315,7 @@ var _CommandMapDefaultSubCommand = map[Command]int16{
 }
 
 // DefaultSubCommand is the attribute of Command.
-func (x Command) DefaultSubCommand() int16 {
+func (x Command) DefaultSubCommand() uint16 {
 	if v, ok := _CommandMapDefaultSubCommand[x]; ok {
 		return v
 	}

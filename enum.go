@@ -2,10 +2,13 @@ package melsec
 
 import "strings"
 
+// @EnumConfig(Marshal, NoCase)
+//go:generate ag
+
 /*
 Command : command code
 
-	@Enum(command int16, defaultSubCommand int16) {
+	@Enum(command uint16, defaultSubCommand uint16) {
 		ReadCpuType		 (0x0101, 0x0000)
 		BatchReadWords   (0x0401, 0x0000)
 		BatchReadBits    (0x0401, 0x0001)
@@ -27,7 +30,7 @@ Command : command code
 */
 type Command int16
 
-func (c Command) SubCommand(plcType PlcType) int16 {
+func (c Command) SubCommand(plcType PlcType) uint16 {
 	if plcType == PlcTypeIQr {
 		switch c {
 		case CommandBatchReadWords, CommandBatchWriteWords, CommandRandomReadWords, CommandRandomWriteWords:
@@ -56,9 +59,9 @@ type PlcType int
 /*
 CommType : communication type
 
-	@Enum(wordSize uint16) {
-		BINARY(2)
-		ASCII(4)
+	@Enum(wordSize uint16, answerStatus uint16, answerData uint16) {
+		BINARY(2, 9, 11)
+		ASCII(4, 18, 22)
 	}
 */
 type CommType string

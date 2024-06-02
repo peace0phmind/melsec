@@ -3,13 +3,16 @@ package melsec
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
+	"github.com/expgo/log"
 	"io"
 	"reflect"
 	"strconv"
 )
 
 type type3E struct {
+	log.InnerLog
 	handler       *transporter
 	plcType       PlcType  `value:"QnA"`
 	commType      CommType `value:"binary"`
@@ -122,7 +125,7 @@ func (t *type3E) decodeValue(buf []byte, value any) error {
 	return nil
 }
 
-func (t *type3E) writeCommandData(w io.Writer, command, subCommand int16) error {
+func (t *type3E) writeCommandData(w io.Writer, command, subCommand uint16) error {
 	if err := t.writeValue(w, command); err != nil {
 		return err
 	} else {
@@ -200,60 +203,71 @@ func (t *type3E) makeSendDataByCmd(cmd Command, device Device, address int, read
 	return data, nil
 }
 
-func (t *type3E) BatchReadBits(device Device, address int, readSize int16) error {
-	t.makeSendDataByCmd(CommandBatchReadBits, device, address, readSize)
+var UnsupportedCommand = errors.New("unsupported command")
 
-	return nil
-	//requestData = append(requestData, handler.EncodeValue(readSize)...)
-	//sendData := handler.MakeSendData(requestData.Bytes())
-	//
-	//err := handler.Send(sendData)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//recvData, err := handler.Recv()
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//err = handler.CheckCmdAnswer(recvData)
-	//if err != nil {
-	//	return nil, err
-	//}
-	//
-	//bitValues := make([]int, 0)
-	//if handler.Commtype == commtypeBinary {
-	//	for i := 0; i < readSize; i++ {
-	//		dataIndex := i/2 + handler.GetAnswerDataIndex()
-	//		value := int(binary.LittleEndian.Uint16(recvData[dataIndex : dataIndex+1]))
-	//
-	//		var bitvalue int
-	//		if i%2 == 0 {
-	//			if (value & (1 << 4)) != 0 {
-	//				bitvalue = 1
-	//			} else {
-	//				bitvalue = 0
-	//			}
-	//		} else {
-	//			if (value & (1 << 0)) != 0 {
-	//				bitvalue = 1
-	//			} else {
-	//				bitvalue = 0
-	//			}
-	//		}
-	//		bitValues = append(bitValues, bitvalue)
-	//	}
-	//} else {
-	//	dataIndex := handler.GetAnswerDataIndex()
-	//	byteRange := 1
-	//	for i := 0; i < readSize; i++ {
-	//		bitvalue, _ := strconv.Atoi(string(recvData[dataIndex : dataIndex+byteRange]))
-	//		bitValues = append(bitValues, bitvalue)
-	//		dataIndex += byteRange
-	//	}
-	//}
-	//return bitValues, nil
+func (t *type3E) checkCmdAnswer(buf []byte) error {
+	var status uint16
+	err := t.decodeValue(buf[t.commType.AnswerStatus():t.commType.AnswerStatus()+t.commType.WordSize()], &status)
+	if err != nil {
+		return err
+	}
+
+	switch status {
+	case 0:
+		return nil
+	case 0xC059:
+		return UnsupportedCommand
+	default:
+		return fmt.Errorf("mc protocol error: error code 0x%04X", status)
+	}
+}
+
+func (t *type3E) BatchReadBits(device Device, address int, readSize int16) ([]int, error) {
+	buf, err := t.makeSendDataByCmd(CommandBatchReadBits, device, address, readSize)
+	if err != nil {
+		t.L.Warn(err)
+		return nil, err
+	}
+
+	if err = t.checkCmdAnswer(buf); err != nil {
+		t.L.Warn(err)
+		return nil, err
+	}
+
+	bitValues := make([]int, 0)
+	answerDataIndex := int(t.commType.AnswerData())
+	if t.commType == CommTypeBinary {
+		for i := 0; i < int(readSize); i++ {
+			dataIndex := i/2 + answerDataIndex
+			value := binary.LittleEndian.Uint16(buf[dataIndex : dataIndex+1])
+
+			var bitValue int
+			if i%2 == 0 {
+				if (value & (1 << 4)) != 0 {
+					bitValue = 1
+				} else {
+					bitValue = 0
+				}
+			} else {
+				if (value & (1 << 0)) != 0 {
+					bitValue = 1
+				} else {
+					bitValue = 0
+				}
+			}
+			bitValues = append(bitValues, bitValue)
+		}
+	} else {
+		dataIndex := answerDataIndex
+		byteRange := 1
+		for i := 0; i < int(readSize); i++ {
+			bitValue, _ := strconv.Atoi(string(buf[dataIndex : dataIndex+byteRange]))
+			bitValues = append(bitValues, bitValue)
+			dataIndex += byteRange
+		}
+	}
+
+	return bitValues, nil
 }
 
 func (t *type3E) BatchReadWords(device Device, address int, readSize int16) error {
