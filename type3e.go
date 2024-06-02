@@ -14,7 +14,7 @@ import (
 
 type type3E struct {
 	log.InnerLog
-	handler       *Transporter
+	transporter   *Transporter
 	plcType       PlcType  `value:"QnA"`
 	commType      CommType `value:"binary"`
 	subheader     uint16   `value:"0x5000"`
@@ -25,9 +25,9 @@ type type3E struct {
 	timer         uint16   `value:"4"`
 }
 
-func NewType3E(handler *Transporter) Type3E {
+func NewType3E(transporter *Transporter) Type3E {
 	ret := factory.New[type3E]()
-	ret.handler = handler
+	ret.transporter = transporter
 	return ret
 }
 
@@ -236,7 +236,7 @@ func (t *type3E) BatchReadBits(deviceAddress *DeviceAddress, readSize int16) ([]
 		return nil, err
 	}
 
-	resp, err := t.handler.Send(req)
+	resp, err := t.transporter.Send(req)
 	if err != nil {
 		t.L.Warn(err)
 		return nil, err
@@ -290,7 +290,7 @@ func (t *type3E) BatchReadWords(deviceAddress *DeviceAddress, readSize int16) ([
 		return nil, err
 	}
 
-	resp, err := t.handler.Send(req)
+	resp, err := t.transporter.Send(req)
 	if err != nil {
 		t.L.Warn(err)
 		return nil, err
@@ -346,7 +346,7 @@ func (t *type3E) RandomRead(wordDevices, dwordDevices []*DeviceAddress) ([]uint1
 
 	req := t.makeSendData(requestData.Bytes())
 
-	resp, err := t.handler.Send(req)
+	resp, err := t.transporter.Send(req)
 	if err != nil {
 		t.L.Warn(err)
 		return nil, nil, err
