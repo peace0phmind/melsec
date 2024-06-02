@@ -2,6 +2,7 @@ package melsec
 
 import (
 	"fmt"
+	"github.com/expgo/factory"
 	"github.com/expgo/log"
 	"io"
 	"net"
@@ -9,8 +10,8 @@ import (
 	"time"
 )
 
-// transporter implements transporter interface.
-type transporter struct {
+// Transporter implements Transporter interface.
+type Transporter struct {
 	log.InnerLog
 	Address              string        // Connect string
 	Timeout              time.Duration `value:"10s"` // Connect & Read timeout
@@ -30,16 +31,22 @@ type transporter struct {
 	state TcpState
 }
 
-func (t *transporter) CheckState() error {
+func NewTransporter(address string) *Transporter {
+	ret := factory.New[Transporter]()
+	ret.Address = address
+	return ret
+}
+
+func (t *Transporter) CheckState() error {
 	if t.state == TcpStateConnected || t.state == TcpStateConnectClosed {
 		return nil
 	}
 
-	return fmt.Errorf("check state error: transporter state is %s", t.state)
+	return fmt.Errorf("check state error: Transporter state is %s", t.state)
 }
 
 // Send sends data to server and ensures response length is greater than header length.
-func (t *transporter) Send(request []byte) (response []byte, err error) {
+func (t *Transporter) Send(request []byte) (response []byte, err error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -110,14 +117,14 @@ func (t *transporter) Send(request []byte) (response []byte, err error) {
 
 // Connect establishes a new connection to the address in Address.
 // Connect and Close are exported so that multiple requests can be done with one session
-func (t *transporter) Connect() error {
+func (t *Transporter) Connect() error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
 	return t.connect()
 }
 
-func (t *transporter) setState(state TcpState) {
+func (t *Transporter) setState(state TcpState) {
 	if state == TcpStateDisconnected {
 		t.close()
 		t.startReconnectTimer()
@@ -132,7 +139,7 @@ func (t *transporter) setState(state TcpState) {
 	t.state = state
 }
 
-func (t *transporter) connect() error {
+func (t *Transporter) connect() error {
 	if t.state == TcpStateConnected {
 		return nil
 	}
@@ -154,7 +161,7 @@ func (t *transporter) connect() error {
 	return nil
 }
 
-func (t *transporter) startCloseTimer() {
+func (t *Transporter) startCloseTimer() {
 	if t.IdleTimeout <= 0 {
 		return
 	}
@@ -165,7 +172,7 @@ func (t *transporter) startCloseTimer() {
 	}
 }
 
-func (t *transporter) startReconnectTimer() {
+func (t *Transporter) startReconnectTimer() {
 	if t.ReconnectionInterval <= 0 {
 		return
 	}
@@ -177,7 +184,7 @@ func (t *transporter) startReconnectTimer() {
 	}
 }
 
-func (t *transporter) reconnect() {
+func (t *Transporter) reconnect() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -197,7 +204,7 @@ func (t *transporter) reconnect() {
 }
 
 // Close closes current connection.
-func (t *transporter) Close() error {
+func (t *Transporter) Close() error {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -224,7 +231,7 @@ func (t *transporter) Close() error {
 
 // flush flushes pending data in the connection,
 // returns io.EOF if connection is closed.
-func (t *transporter) flush(b []byte) (err error) {
+func (t *Transporter) flush(b []byte) (err error) {
 	if err = t.conn.SetReadDeadline(time.Now()); err != nil {
 		return
 	}
@@ -239,7 +246,7 @@ func (t *transporter) flush(b []byte) (err error) {
 }
 
 // closeLocked closes current connection. Caller must hold the mutex before calling this method.
-func (t *transporter) close() (err error) {
+func (t *Transporter) close() (err error) {
 	if t.conn != nil {
 		err = t.conn.Close()
 		t.conn = nil
@@ -248,7 +255,7 @@ func (t *transporter) close() (err error) {
 }
 
 // closeIdle closes the connection if last activity is passed behind IdleTimeout.
-func (t *transporter) closeIdle() {
+func (t *Transporter) closeIdle() {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -256,7 +263,7 @@ func (t *transporter) closeIdle() {
 		return
 	}
 
-	t.L.Infof("transporter is idle for %d, connect closed", t.IdleTimeout)
+	t.L.Infof("Transporter is idle for %d, connect closed", t.IdleTimeout)
 
 	idle := time.Now().Sub(t.lastActivity)
 	if idle >= t.IdleTimeout {

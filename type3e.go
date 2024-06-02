@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+	"github.com/expgo/factory"
 	"github.com/expgo/log"
 	"io"
 	"reflect"
@@ -13,7 +14,7 @@ import (
 
 type type3E struct {
 	log.InnerLog
-	handler       *transporter
+	handler       *Transporter
 	plcType       PlcType  `value:"QnA"`
 	commType      CommType `value:"binary"`
 	subheader     uint16   `value:"0x5000"`
@@ -22,6 +23,12 @@ type type3E struct {
 	destModuleIo  uint16   `value:"0x3FF"`
 	destModuleSta byte     `value:"0x0"`
 	timer         uint16   `value:"4"`
+}
+
+func NewType3E(handler *Transporter) Type3E {
+	ret := factory.New[type3E]()
+	ret.handler = handler
+	return ret
 }
 
 func (t *type3E) writeValue(w io.Writer, value any) error {
@@ -180,13 +187,13 @@ func (t *type3E) makeSendData(buf []byte) []byte {
 	return data.Bytes()
 }
 
-func (t *type3E) makeSendDataByCmd(cmd Command, device Device, address int, readSize int16) ([]byte, error) {
+func (t *type3E) makeBatchSendData(cmd Command, deviceAddress *DeviceAddress, readSize int16) ([]byte, error) {
 	var requestData bytes.Buffer
 	if err := t.writeCommandData(&requestData, cmd.Command(), cmd.SubCommand(t.plcType)); err != nil {
 		return nil, err
 	}
 
-	if buf, err := t.makeDeviceData(device, address); err != nil {
+	if buf, err := t.makeDeviceData(deviceAddress.device, deviceAddress.address); err != nil {
 		return nil, err
 	} else {
 		if _, err = requestData.Write(buf); err != nil {
@@ -222,26 +229,32 @@ func (t *type3E) checkCmdAnswer(buf []byte) error {
 	}
 }
 
-func (t *type3E) BatchReadBits(device Device, address int, readSize int16) ([]int, error) {
-	buf, err := t.makeSendDataByCmd(CommandBatchReadBits, device, address, readSize)
+func (t *type3E) BatchReadBits(deviceAddress *DeviceAddress, readSize int16) ([]byte, error) {
+	req, err := t.makeBatchSendData(CommandBatchReadBits, deviceAddress, readSize)
 	if err != nil {
 		t.L.Warn(err)
 		return nil, err
 	}
 
-	if err = t.checkCmdAnswer(buf); err != nil {
+	resp, err := t.handler.Send(req)
+	if err != nil {
 		t.L.Warn(err)
 		return nil, err
 	}
 
-	bitValues := make([]int, 0)
+	if err = t.checkCmdAnswer(resp); err != nil {
+		t.L.Warn(err)
+		return nil, err
+	}
+
+	bitValues := make([]byte, 0)
 	answerDataIndex := int(t.commType.AnswerData())
 	if t.commType == CommTypeBinary {
 		for i := 0; i < int(readSize); i++ {
 			dataIndex := i/2 + answerDataIndex
-			value := binary.LittleEndian.Uint16(buf[dataIndex : dataIndex+1])
+			value := binary.LittleEndian.Uint16(resp[dataIndex : dataIndex+1])
 
-			var bitValue int
+			var bitValue byte
 			if i%2 == 0 {
 				if (value & (1 << 4)) != 0 {
 					bitValue = 1
@@ -261,8 +274,8 @@ func (t *type3E) BatchReadBits(device Device, address int, readSize int16) ([]in
 		dataIndex := answerDataIndex
 		byteRange := 1
 		for i := 0; i < int(readSize); i++ {
-			bitValue, _ := strconv.Atoi(string(buf[dataIndex : dataIndex+byteRange]))
-			bitValues = append(bitValues, bitValue)
+			bitValue, _ := strconv.Atoi(string(resp[dataIndex : dataIndex+byteRange]))
+			bitValues = append(bitValues, byte(bitValue))
 			dataIndex += byteRange
 		}
 	}
@@ -270,6 +283,102 @@ func (t *type3E) BatchReadBits(device Device, address int, readSize int16) ([]in
 	return bitValues, nil
 }
 
-func (t *type3E) BatchReadWords(device Device, address int, readSize int16) error {
-	return nil
+func (t *type3E) BatchReadWords(deviceAddress *DeviceAddress, readSize int16) ([]uint16, error) {
+	req, err := t.makeBatchSendData(CommandBatchReadWords, deviceAddress, readSize)
+	if err != nil {
+		t.L.Warn(err)
+		return nil, err
+	}
+
+	resp, err := t.handler.Send(req)
+	if err != nil {
+		t.L.Warn(err)
+		return nil, err
+	}
+
+	if err = t.checkCmdAnswer(resp); err != nil {
+		t.L.Warn(err)
+		return nil, err
+	}
+
+	wordValues := make([]uint16, 0)
+	dataIndex := t.commType.AnswerData()
+	for i := 0; i < int(readSize); i++ {
+		var wordValue uint16
+		if err = t.decodeValue(resp[dataIndex:dataIndex+t.commType.WordSize()], &wordValue); err != nil {
+			t.L.Warn(err)
+			return nil, err
+		}
+		wordValues = append(wordValues, wordValue)
+		dataIndex += t.commType.WordSize()
+	}
+
+	return wordValues, nil
+}
+
+func (t *type3E) writeDeviceData(w io.Writer, deviceAddress *DeviceAddress) error {
+	buf, err := t.makeDeviceData(deviceAddress.device, deviceAddress.address)
+	if err != nil {
+		return err
+	}
+	_, err = w.Write(buf)
+	return err
+}
+
+func (t *type3E) RandomRead(wordDevices, dwordDevices []*DeviceAddress) ([]uint16, []uint32, error) {
+	var requestData bytes.Buffer
+	if err := t.writeCommandData(&requestData, CommandRandomReadWords.Command(), CommandRandomReadWords.SubCommand(t.plcType)); err != nil {
+		return nil, nil, err
+	}
+
+	_ = t.writeValue(&requestData, byte(len(wordDevices)))
+	_ = t.writeValue(&requestData, byte(len(dwordDevices)))
+	for _, wordDevice := range wordDevices {
+		if err := t.writeDeviceData(&requestData, wordDevice); err != nil {
+			return nil, nil, err
+		}
+	}
+	for _, dwordDevice := range dwordDevices {
+		if err := t.writeDeviceData(&requestData, dwordDevice); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	req := t.makeSendData(requestData.Bytes())
+
+	resp, err := t.handler.Send(req)
+	if err != nil {
+		t.L.Warn(err)
+		return nil, nil, err
+	}
+
+	if err = t.checkCmdAnswer(resp); err != nil {
+		t.L.Warn(err)
+		return nil, nil, err
+	}
+
+	dataIndex := t.commType.AnswerData()
+	wordSize := t.commType.WordSize()
+
+	wordValues := []uint16{}
+	dwordValues := []uint32{}
+
+	for range wordDevices {
+		var wordValue uint16
+		if err = t.decodeValue(resp[dataIndex:dataIndex+wordSize], &wordValue); err != nil {
+			return nil, nil, err
+		}
+		wordValues = append(wordValues, wordValue)
+		dataIndex += wordSize
+	}
+	for range dwordValues {
+		var dwordValue uint32
+		if err = t.decodeValue(resp[dataIndex:dataIndex+wordSize*2], &dwordValue); err != nil {
+			return nil, nil, err
+		}
+		dwordValues = append(dwordValues, dwordValue)
+		dataIndex += wordSize * 2
+	}
+
+	return wordValues, dwordValues, nil
 }
