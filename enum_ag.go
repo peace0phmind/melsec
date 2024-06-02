@@ -54,57 +54,57 @@ const (
 
 const (
 	// DeviceSm is a Device of type SM.
-	DeviceSm Device = iota
+	DeviceSm Device = iota // 特殊继电器, bit, 10
 	// DeviceSd is a Device of type SD.
-	DeviceSd
+	DeviceSd // 特殊寄存器, word, 10
 	// DeviceX is a Device of type X.
-	DeviceX
+	DeviceX // 输入, bit, 16
 	// DeviceY is a Device of type Y.
-	DeviceY
+	DeviceY // 输出, bit, 16
 	// DeviceM is a Device of type M.
-	DeviceM
+	DeviceM // 内部继电器, bit, 10
 	// DeviceL is a Device of type L.
-	DeviceL
+	DeviceL // 锁存继电器, bit, 10
 	// DeviceF is a Device of type F.
-	DeviceF
+	DeviceF // 报警器, bit, 10
 	// DeviceV is a Device of type V.
-	DeviceV
+	DeviceV // 变址继电器, bit, 10
 	// DeviceB is a Device of type B.
-	DeviceB
+	DeviceB // 链接继电器, bit, 16
 	// DeviceD is a Device of type D.
-	DeviceD
+	DeviceD // 数据寄存器, word, 10
 	// DeviceW is a Device of type W.
-	DeviceW
+	DeviceW // 链接寄存器, word, 16
 	// DeviceTs is a Device of type TS.
-	DeviceTs
+	DeviceTs // 定时器, 触点 bit, 10
 	// DeviceTc is a Device of type TC.
-	DeviceTc
+	DeviceTc // 定时器, 线圈 bit, 10
 	// DeviceTn is a Device of type TN.
-	DeviceTn
+	DeviceTn // 定时器当前值 word, 10
 	// DeviceSs is a Device of type SS.
-	DeviceSs
+	DeviceSs // 累计定时器, 触点 bit, 10
 	// DeviceSc is a Device of type SC.
-	DeviceSc
+	DeviceSc // 累计定时器, 线圈 bit, 10
 	// DeviceSn is a Device of type SN.
-	DeviceSn
+	DeviceSn // 累计定时器当前值 word, 10
 	// DeviceCs is a Device of type CS.
-	DeviceCs
+	DeviceCs // 计数器, 触点 bit, 10
 	// DeviceCc is a Device of type CC.
-	DeviceCc
+	DeviceCc // 计数器, 线圈 bit, 10
 	// DeviceCn is a Device of type CN.
-	DeviceCn
+	DeviceCn // 计数器当前值 word, 10
 	// DeviceSb is a Device of type SB.
-	DeviceSb
+	DeviceSb // 链接特殊继电器 bit, 16
 	// DeviceSw is a Device of type SW.
-	DeviceSw
+	DeviceSw // 链接特殊寄存器 word, 16
 	// DeviceDx is a Device of type DX.
-	DeviceDx
+	DeviceDx // 直接访问输入 bit, 16
 	// DeviceDy is a Device of type DY.
-	DeviceDy
+	DeviceDy // 直接访问输出 bit, 16
 	// DeviceR is a Device of type R.
-	DeviceR
+	DeviceR // 文件寄存器, 块切换方式 word, 10
 	// DeviceZr is a Device of type ZR.
-	DeviceZr
+	DeviceZr // 文件寄存器, 连号访问方式 word, 16
 )
 
 const (
