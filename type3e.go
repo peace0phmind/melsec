@@ -213,23 +213,6 @@ func (t *type3E) makeBatchSendData(cmd Command, deviceAddress *DeviceAddress, re
 
 var UnsupportedCommand = errors.New("unsupported command")
 
-func (t *type3E) checkCmdAnswer(buf []byte) error {
-	var status uint16
-	err := t.decodeValue(buf[t.commType.AnswerStatus():t.commType.AnswerStatus()+t.commType.WordSize()], &status)
-	if err != nil {
-		return err
-	}
-
-	switch status {
-	case 0:
-		return nil
-	case 0xC059:
-		return UnsupportedCommand
-	default:
-		return fmt.Errorf("mc protocol error: error code 0x%04X", status)
-	}
-}
-
 func (t *type3E) BatchReadBits(deviceAddress *DeviceAddress, readSize int16) ([]byte, error) {
 	req, err := t.makeBatchSendData(CommandBatchReadBits, deviceAddress, readSize)
 	if err != nil {
@@ -237,7 +220,7 @@ func (t *type3E) BatchReadBits(deviceAddress *DeviceAddress, readSize int16) ([]
 		return nil, err
 	}
 
-	dataSize := int(readSize) + 1/2
+	dataSize := (int(readSize) + 1) / 2
 	if t.commType == CommTypeAscii {
 		dataSize = int(readSize)
 	}
@@ -248,17 +231,12 @@ func (t *type3E) BatchReadBits(deviceAddress *DeviceAddress, readSize int16) ([]
 		return nil, err
 	}
 
-	if err = t.checkCmdAnswer(resp); err != nil {
-		t.L.Warn(err)
-		return nil, err
-	}
-
 	bitValues := make([]byte, 0)
 	answerDataIndex := int(t.commType.AnswerData())
 	if t.commType == CommTypeBinary {
 		for i := 0; i < int(readSize); i++ {
 			dataIndex := i/2 + answerDataIndex
-			value := binary.LittleEndian.Uint16(resp[dataIndex : dataIndex+1])
+			value := resp[dataIndex]
 
 			var bitValue byte
 			if i%2 == 0 {
@@ -298,11 +276,6 @@ func (t *type3E) BatchReadWords(deviceAddress *DeviceAddress, readSize int16) ([
 
 	resp, err := t.transporter.Send(req, int(t.commType.WordSize())*int(readSize))
 	if err != nil {
-		t.L.Warn(err)
-		return nil, err
-	}
-
-	if err = t.checkCmdAnswer(resp); err != nil {
 		t.L.Warn(err)
 		return nil, err
 	}
@@ -360,11 +333,6 @@ func (t *type3E) RandomRead(wordDevices, dwordDevices []*DeviceAddress) ([]uint1
 		return nil, nil, err
 	}
 
-	if err = t.checkCmdAnswer(resp); err != nil {
-		t.L.Warn(err)
-		return nil, nil, err
-	}
-
 	dataIndex := t.commType.AnswerData()
 	wordSize := t.commType.WordSize()
 
@@ -379,7 +347,7 @@ func (t *type3E) RandomRead(wordDevices, dwordDevices []*DeviceAddress) ([]uint1
 		wordValues = append(wordValues, wordValue)
 		dataIndex += wordSize
 	}
-	for range dwordValues {
+	for range dwordDevices {
 		var dwordValue uint32
 		if err = t.decodeValue(resp[dataIndex:dataIndex+wordSize*2], &dwordValue); err != nil {
 			return nil, nil, err

@@ -190,4 +190,12 @@ func TestRemote(t *testing.T) {
 	ret, err := t3e.BatchReadWords(NewDeviceAddress(DeviceD, 0), 1)
 	assert.NoError(t, err)
 	assert.Equal(t, uint16(23), ret[0])
+
+	_, ui32, err := t3e.RandomRead(nil, []*DeviceAddress{NewDeviceAddress(DeviceD, 2)})
+	assert.NoError(t, err)
+	assert.Equal(t, uint32(65537), ui32[0])
+
+	bitValues, err := t3e.BatchReadBits(NewDeviceAddress(DeviceF, 0), 1)
+	assert.NoError(t, err)
+	assert.Equal(t, byte(1), bitValues[0])
 }
