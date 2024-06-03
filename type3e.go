@@ -28,6 +28,7 @@ type type3E struct {
 func NewType3E(transporter *Transporter) Type3E {
 	ret := factory.New[type3E]()
 	ret.transporter = transporter
+	ret.transporter.commType = ret.commType
 	return ret
 }
 
@@ -236,7 +237,12 @@ func (t *type3E) BatchReadBits(deviceAddress *DeviceAddress, readSize int16) ([]
 		return nil, err
 	}
 
-	resp, err := t.transporter.Send(req)
+	dataSize := int(readSize) + 1/2
+	if t.commType == CommTypeAscii {
+		dataSize = int(readSize)
+	}
+
+	resp, err := t.transporter.Send(req, dataSize)
 	if err != nil {
 		t.L.Warn(err)
 		return nil, err
@@ -290,7 +296,7 @@ func (t *type3E) BatchReadWords(deviceAddress *DeviceAddress, readSize int16) ([
 		return nil, err
 	}
 
-	resp, err := t.transporter.Send(req)
+	resp, err := t.transporter.Send(req, int(t.commType.WordSize())*int(readSize))
 	if err != nil {
 		t.L.Warn(err)
 		return nil, err
@@ -331,8 +337,10 @@ func (t *type3E) RandomRead(wordDevices, dwordDevices []*DeviceAddress) ([]uint1
 		return nil, nil, err
 	}
 
-	_ = t.writeValue(&requestData, byte(len(wordDevices)))
-	_ = t.writeValue(&requestData, byte(len(dwordDevices)))
+	wordLen := len(wordDevices)
+	dwordLen := len(dwordDevices)
+	_ = t.writeValue(&requestData, byte(wordLen))
+	_ = t.writeValue(&requestData, byte(dwordLen))
 	for _, wordDevice := range wordDevices {
 		if err := t.writeDeviceData(&requestData, wordDevice); err != nil {
 			return nil, nil, err
@@ -346,7 +354,7 @@ func (t *type3E) RandomRead(wordDevices, dwordDevices []*DeviceAddress) ([]uint1
 
 	req := t.makeSendData(requestData.Bytes())
 
-	resp, err := t.transporter.Send(req)
+	resp, err := t.transporter.Send(req, (wordLen+2*dwordLen)*int(t.commType.WordSize()))
 	if err != nil {
 		t.L.Warn(err)
 		return nil, nil, err

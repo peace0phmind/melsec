@@ -1,11 +1,14 @@
 package melsec
 
 import (
+	"encoding/binary"
 	"fmt"
 	"github.com/expgo/factory"
 	"github.com/expgo/log"
 	"io"
 	"net"
+	"reflect"
+	"strconv"
 	"sync"
 	"time"
 )
@@ -28,7 +31,8 @@ type Transporter struct {
 	reconnectTimer *time.Timer
 	lastActivity   time.Time
 
-	state TcpState
+	state    TcpState
+	commType CommType
 }
 
 func NewTransporter(address string) *Transporter {
@@ -45,8 +49,73 @@ func (t *Transporter) CheckState() error {
 	return fmt.Errorf("check state error: Transporter state is %s", t.state)
 }
 
+func (t *Transporter) checkCmdAnswer(buf []byte) error {
+	var status uint16
+	err := t.decodeValue(buf[t.commType.AnswerStatus():t.commType.AnswerStatus()+t.commType.WordSize()], &status)
+	if err != nil {
+		return err
+	}
+
+	switch status {
+	case 0:
+		return nil
+	case 0xC059:
+		return UnsupportedCommand
+	default:
+		return fmt.Errorf("mc protocol error: error code 0x%04X", status)
+	}
+}
+
+func (t *Transporter) decodeValue(buf []byte, value any) error {
+	if t.commType == CommTypeBinary {
+		switch v := value.(type) {
+		case *int16:
+			*v = int16(binary.LittleEndian.Uint16(buf))
+		case *uint16:
+			*v = binary.LittleEndian.Uint16(buf)
+		case *int32:
+			*v = int32(binary.LittleEndian.Uint32(buf))
+		case *uint32:
+			*v = binary.LittleEndian.Uint32(buf)
+		default:
+			return fmt.Errorf("decode unsupported value type: %v", reflect.TypeOf(value))
+		}
+	} else {
+		switch v := value.(type) {
+		case *int16:
+			if ret, err := strconv.ParseInt(string(buf), 16, 16); err != nil {
+				return err
+			} else {
+				*v = int16(ret)
+			}
+		case *uint16:
+			if ret, err := strconv.ParseUint(string(buf), 16, 16); err != nil {
+				return err
+			} else {
+				*v = uint16(ret)
+			}
+		case *int32:
+			if ret, err := strconv.ParseInt(string(buf), 16, 32); err != nil {
+				return err
+			} else {
+				*v = int32(ret)
+			}
+		case *uint32:
+			if ret, err := strconv.ParseUint(string(buf), 16, 32); err != nil {
+				return err
+			} else {
+				*v = uint32(ret)
+			}
+		default:
+			return fmt.Errorf("decode unsupported value type: %v", reflect.TypeOf(value))
+		}
+	}
+
+	return nil
+}
+
 // Send sends data to server and ensures response length is greater than header length.
-func (t *Transporter) Send(request []byte) (response []byte, err error) {
+func (t *Transporter) Send(request []byte, dataSize int) (response []byte, err error) {
 	t.mu.Lock()
 	defer t.mu.Unlock()
 
@@ -74,44 +143,34 @@ func (t *Transporter) Send(request []byte) (response []byte, err error) {
 		return
 	}
 
-	buf := make([]byte, t.RecvBufSize)
+	header := make([]byte, t.commType.AnswerStatus()+t.commType.WordSize())
 
-	if _, err = io.ReadFull(t.conn, buf); err != nil {
+	if _, err = io.ReadFull(t.conn, header); err != nil {
 		t.setState(TcpStateDisconnected)
 		t.L.Error(err)
 		return
-	} else {
-		return buf, nil
 	}
 
-	// Read header first
-	//var data [tcpMaxLength]byte
-	//if _, err = io.ReadFull(t.conn, data[:tcpHeaderSize]); err != nil {
-	//	t.setState(TcpStateDisconnected)
-	//	return
-	//}
-	//// Read length, ignore transaction & protocol id (4 bytes)
-	//length := int(binary.BigEndian.Uint16(data[4:]))
-	//if length <= 0 {
-	//	t.flush(data[:])
-	//	err = fmt.Errorf("length in response header '%v' must not be zero", length)
-	//	t.setState(TcpStateDisconnected)
-	//	return
-	//}
-	//if length > (tcpMaxLength - (tcpHeaderSize - 1)) {
-	//	t.flush(data[:])
-	//	err = fmt.Errorf("length in response header '%v' must not greater than '%v'", length, tcpMaxLength-tcpHeaderSize+1)
-	//	t.setState(TcpStateDisconnected)
-	//	return
-	//}
-	//// Skip unit id
-	//length += tcpHeaderSize - 1
-	//if _, err = io.ReadFull(t.conn, data[tcpHeaderSize:length]); err != nil {
-	//	t.setState(TcpStateDisconnected)
-	//	return
-	//}
-	//response = data[:length]
-	//t.L.Debugf("received % x\n", response)
+	if err = t.checkCmdAnswer(header); err != nil {
+		errBuf := make([]byte, 9)
+		if _, err1 := io.ReadFull(t.conn, errBuf); err1 != nil {
+			t.setState(TcpStateDisconnected)
+			t.L.Error(err1)
+			return nil, err1
+		}
+		// skip 9 byte
+		return
+	}
+
+	response = make([]byte, dataSize)
+	if _, err = io.ReadFull(t.conn, response); err != nil {
+		t.setState(TcpStateDisconnected)
+		t.L.Error(err)
+		return
+	}
+
+	response = append(header, response...)
+
 	return
 }
 

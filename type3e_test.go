@@ -2,6 +2,7 @@ package melsec
 
 import (
 	"encoding/hex"
+	"fmt"
 	"github.com/expgo/factory"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -179,5 +180,14 @@ func TestMakeSendData(t *testing.T) {
 	assert.NoError(t, e)
 	bytes, _ = hex.DecodeString("35303030303046463033464630303030314330303034303430313030303354532a2a303030303132333430303038")
 	assert.Equal(t, bytes, buf)
+}
 
+func TestRemote(t *testing.T) {
+	transporter := NewTransporter(fmt.Sprintf("%s:%d", "192.168.1.232", 1025))
+	_ = transporter.Connect()
+
+	t3e := NewType3E(transporter)
+	ret, err := t3e.BatchReadWords(NewDeviceAddress(DeviceD, 0), 1)
+	assert.NoError(t, err)
+	assert.Equal(t, uint16(23), ret[0])
 }
