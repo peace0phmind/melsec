@@ -188,7 +188,7 @@ func (t *type3E) makeSendData(buf []byte) []byte {
 	return data.Bytes()
 }
 
-func (t *type3E) makeBatchSendData(cmd Command, deviceAddress *DeviceAddress, readSize int16) ([]byte, error) {
+func (t *type3E) makeCommandData(cmd Command, deviceAddress *DeviceAddress, readSize int16) ([]byte, error) {
 	var requestData bytes.Buffer
 	if err := t.writeCommandData(&requestData, cmd.Command(), cmd.SubCommand(t.plcType)); err != nil {
 		return nil, err
@@ -207,18 +207,19 @@ func (t *type3E) makeBatchSendData(cmd Command, deviceAddress *DeviceAddress, re
 		return nil, err
 	}
 
-	data := t.makeSendData(requestData.Bytes())
-	return data, nil
+	return requestData.Bytes(), nil
 }
 
 var UnsupportedCommand = errors.New("unsupported command")
 
 func (t *type3E) BatchReadBits(deviceAddress *DeviceAddress, readSize int16) ([]byte, error) {
-	req, err := t.makeBatchSendData(CommandBatchReadBits, deviceAddress, readSize)
+	req, err := t.makeCommandData(CommandBatchReadBits, deviceAddress, readSize)
 	if err != nil {
 		t.L.Warn(err)
 		return nil, err
 	}
+
+	req = t.makeSendData(req)
 
 	dataSize := (int(readSize) + 1) / 2
 	if t.commType == CommTypeAscii {
@@ -268,11 +269,13 @@ func (t *type3E) BatchReadBits(deviceAddress *DeviceAddress, readSize int16) ([]
 }
 
 func (t *type3E) BatchReadWords(deviceAddress *DeviceAddress, readSize int16) ([]uint16, error) {
-	req, err := t.makeBatchSendData(CommandBatchReadWords, deviceAddress, readSize)
+	req, err := t.makeCommandData(CommandBatchReadWords, deviceAddress, readSize)
 	if err != nil {
 		t.L.Warn(err)
 		return nil, err
 	}
+
+	req = t.makeSendData(req)
 
 	resp, err := t.transporter.Send(req, int(t.commType.WordSize())*int(readSize))
 	if err != nil {
@@ -357,4 +360,20 @@ func (t *type3E) RandomRead(wordDevices, dwordDevices []*DeviceAddress) ([]uint1
 	}
 
 	return wordValues, dwordValues, nil
+}
+
+func (t *type3E) BatchWriteBits(deviceAddress *DeviceAddress, values []byte) error {
+	return nil
+}
+
+func (t *type3E) BatchWriteWords(deviceAddress *DeviceAddress, values []uint16) error {
+	return nil
+}
+
+func (t *type3E) RandomWriteBits(bitDevices []*DeviceAddress, values []byte) error {
+	return nil
+}
+
+func (t *type3E) RandomWrite(wordDevices []*DeviceAddress, wordValues []uint16, dwordDevices []*DeviceAddress, dwordValues []uint32) error {
+	return nil
 }
