@@ -117,73 +117,85 @@ func TestMakeDeviceData(t *testing.T) {
 
 func TestMakeSendData(t *testing.T) {
 	t3e := factory.New[type3E]()
-	buf, e := t3e.makeBatchSendData(CommandBatchReadBits, NewDeviceAddress(DeviceD, 1200), 20)
+	buf, e := t3e.makeCommandData(CommandBatchReadBits, NewDeviceAddress(DeviceD, 1200), 20)
+	buf = t3e.makeSendData(buf)
 	assert.NoError(t, e)
 	bytes, _ := hex.DecodeString("500000ffff03000c00040001040100b00400a81400")
 	assert.Equal(t, bytes, buf)
 
-	buf, e = t3e.makeBatchSendData(CommandBatchReadBits, NewDeviceAddress(DeviceX, 0x123), 16)
+	buf, e = t3e.makeCommandData(CommandBatchReadBits, NewDeviceAddress(DeviceX, 0x123), 16)
+	buf = t3e.makeSendData(buf)
 	assert.NoError(t, e)
 	bytes, _ = hex.DecodeString("500000ffff03000c000400010401002301009c1000")
 	assert.Equal(t, bytes, buf)
 
-	buf, e = t3e.makeBatchSendData(CommandBatchReadBits, NewDeviceAddress(DeviceTs, 1234), 8)
+	buf, e = t3e.makeCommandData(CommandBatchReadBits, NewDeviceAddress(DeviceTs, 1234), 8)
+	buf = t3e.makeSendData(buf)
 	assert.NoError(t, e)
 	bytes, _ = hex.DecodeString("500000ffff03000c00040001040100d20400c10800")
 	assert.Equal(t, bytes, buf)
 
 	t3e.commType = CommTypeAscii
-	buf, e = t3e.makeBatchSendData(CommandBatchReadBits, NewDeviceAddress(DeviceD, 1200), 20)
+	buf, e = t3e.makeCommandData(CommandBatchReadBits, NewDeviceAddress(DeviceD, 1200), 20)
+	buf = t3e.makeSendData(buf)
 	assert.NoError(t, e)
 	bytes, _ = hex.DecodeString("353030303030464630334646303030303138303030343034303130303031442a30303132303030303134")
 	assert.Equal(t, bytes, buf)
 
-	buf, e = t3e.makeBatchSendData(CommandBatchReadBits, NewDeviceAddress(DeviceX, 0x123), 16)
+	buf, e = t3e.makeCommandData(CommandBatchReadBits, NewDeviceAddress(DeviceX, 0x123), 16)
+	buf = t3e.makeSendData(buf)
 	assert.NoError(t, e)
 	bytes, _ = hex.DecodeString("353030303030464630334646303030303138303030343034303130303031582a30303032393130303130")
 	assert.Equal(t, bytes, buf)
 
-	buf, e = t3e.makeBatchSendData(CommandBatchReadBits, NewDeviceAddress(DeviceTs, 1234), 8)
+	buf, e = t3e.makeCommandData(CommandBatchReadBits, NewDeviceAddress(DeviceTs, 1234), 8)
+	buf = t3e.makeSendData(buf)
 	assert.NoError(t, e)
 	bytes, _ = hex.DecodeString("353030303030464630334646303030303138303030343034303130303031545330303132333430303038")
 	assert.Equal(t, bytes, buf)
 
 	t3e = factory.New[type3E]()
 	t3e.plcType = PlcTypeIQr
-	buf, e = t3e.makeBatchSendData(CommandBatchReadBits, NewDeviceAddress(DeviceD, 1200), 20)
+	buf, e = t3e.makeCommandData(CommandBatchReadBits, NewDeviceAddress(DeviceD, 1200), 20)
+	buf = t3e.makeSendData(buf)
 	assert.NoError(t, e)
 	bytes, _ = hex.DecodeString("500000ffff03000e00040001040300b0040000a8001400")
 	assert.Equal(t, bytes, buf)
 
-	buf, e = t3e.makeBatchSendData(CommandBatchReadBits, NewDeviceAddress(DeviceX, 0x123), 16)
+	buf, e = t3e.makeCommandData(CommandBatchReadBits, NewDeviceAddress(DeviceX, 0x123), 16)
+	buf = t3e.makeSendData(buf)
 	assert.NoError(t, e)
 	bytes, _ = hex.DecodeString("500000ffff03000e00040001040300230100009c001000")
 	assert.Equal(t, bytes, buf)
 
-	buf, e = t3e.makeBatchSendData(CommandBatchReadBits, NewDeviceAddress(DeviceTs, 1234), 8)
+	buf, e = t3e.makeCommandData(CommandBatchReadBits, NewDeviceAddress(DeviceTs, 1234), 8)
+	buf = t3e.makeSendData(buf)
 	assert.NoError(t, e)
 	bytes, _ = hex.DecodeString("500000ffff03000e00040001040300d2040000c1000800")
 	assert.Equal(t, bytes, buf)
 
 	t3e.commType = CommTypeAscii
-	buf, e = t3e.makeBatchSendData(CommandBatchReadBits, NewDeviceAddress(DeviceD, 1200), 20)
+	buf, e = t3e.makeCommandData(CommandBatchReadBits, NewDeviceAddress(DeviceD, 1200), 20)
+	buf = t3e.makeSendData(buf)
 	assert.NoError(t, e)
 	bytes, _ = hex.DecodeString("353030303030464630334646303030303143303030343034303130303033442a2a2a303030303132303030303134")
 	assert.Equal(t, bytes, buf)
 
-	buf, e = t3e.makeBatchSendData(CommandBatchReadBits, NewDeviceAddress(DeviceX, 0x123), 16)
+	buf, e = t3e.makeCommandData(CommandBatchReadBits, NewDeviceAddress(DeviceX, 0x123), 16)
+	buf = t3e.makeSendData(buf)
 	assert.NoError(t, e)
 	bytes, _ = hex.DecodeString("353030303030464630334646303030303143303030343034303130303033582a2a2a303030303032393130303130")
 	assert.Equal(t, bytes, buf)
 
-	buf, e = t3e.makeBatchSendData(CommandBatchReadBits, NewDeviceAddress(DeviceTs, 1234), 8)
+	buf, e = t3e.makeCommandData(CommandBatchReadBits, NewDeviceAddress(DeviceTs, 1234), 8)
+	buf = t3e.makeSendData(buf)
 	assert.NoError(t, e)
 	bytes, _ = hex.DecodeString("35303030303046463033464630303030314330303034303430313030303354532a2a303030303132333430303038")
 	assert.Equal(t, bytes, buf)
 }
 
 func TestRemote(t *testing.T) {
-	transporter := NewTransporter(fmt.Sprintf("%s:%d", "192.168.1.232", 1025))
+	transporter := NewTransporter(fmt.Sprintf("%s:%d", "127.0.0.1", 2025))
 	_ = transporter.Connect()
 
 	t3e := NewType3E(transporter)
@@ -195,7 +207,12 @@ func TestRemote(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, uint32(65537), ui32[0])
 
-	bitValues, err := t3e.BatchReadBits(NewDeviceAddress(DeviceF, 0), 1)
+	bitValues, err := t3e.BatchReadBits(NewDeviceAddress(DeviceF, 0), 2)
 	assert.NoError(t, err)
-	assert.Equal(t, byte(1), bitValues[0])
+	assert.Equal(t, []byte{0x1, 0x0}, bitValues)
+
+	err = t3e.BatchWriteBits(NewDeviceAddress(DeviceX, 0), []byte{0x0, 0x1})
+	assert.NoError(t, err)
+	bitValues, err = t3e.BatchReadBits(NewDeviceAddress(DeviceX, 0), 2)
+	assert.Equal(t, []byte{0x0, 0x1}, bitValues)
 }

@@ -24,8 +24,8 @@ const (
 	CommandBatchReadWords
 	// CommandBatchReadBits is a Command of type BatchReadBits.
 	CommandBatchReadBits
-	// CommandRandomReadWords is a Command of type RandomReadWords.
-	CommandRandomReadWords
+	// CommandRandomRead is a Command of type RandomRead.
+	CommandRandomRead
 	// CommandRemoteRun is a Command of type RemoteRun.
 	CommandRemoteRun
 	// CommandRemoteStop is a Command of type RemoteStop.
@@ -40,8 +40,8 @@ const (
 	CommandBatchWriteWords
 	// CommandBatchWriteBits is a Command of type BatchWriteBits.
 	CommandBatchWriteBits
-	// CommandRandomWriteWords is a Command of type RandomWriteWords.
-	CommandRandomWriteWords
+	// CommandRandomWrite is a Command of type RandomWrite.
+	CommandRandomWrite
 	// CommandRandomWriteBits is a Command of type RandomWriteBits.
 	CommandRandomWriteBits
 	// CommandRemoteUnlock is a Command of type RemoteUnlock.
@@ -234,25 +234,25 @@ func (x *CommType) UnmarshalText(text []byte) error {
 
 var ErrInvalidCommand = errors.New("not a valid Command")
 
-var _CommandName = "ReadCpuTypeBatchReadWordsBatchReadBitsRandomReadWordsRemoteRunRemoteStopRemotePauseRemoteLatchClearRemoteResetBatchWriteWordsBatchWriteBitsRandomWriteWordsRandomWriteBitsRemoteUnlockRemoteLockEchoTest"
+var _CommandName = "ReadCpuTypeBatchReadWordsBatchReadBitsRandomReadRemoteRunRemoteStopRemotePauseRemoteLatchClearRemoteResetBatchWriteWordsBatchWriteBitsRandomWriteRandomWriteBitsRemoteUnlockRemoteLockEchoTest"
 
 var _CommandMapName = map[Command]string{
 	CommandReadCpuType:      _CommandName[0:11],
 	CommandBatchReadWords:   _CommandName[11:25],
 	CommandBatchReadBits:    _CommandName[25:38],
-	CommandRandomReadWords:  _CommandName[38:53],
-	CommandRemoteRun:        _CommandName[53:62],
-	CommandRemoteStop:       _CommandName[62:72],
-	CommandRemotePause:      _CommandName[72:83],
-	CommandRemoteLatchClear: _CommandName[83:99],
-	CommandRemoteReset:      _CommandName[99:110],
-	CommandBatchWriteWords:  _CommandName[110:125],
-	CommandBatchWriteBits:   _CommandName[125:139],
-	CommandRandomWriteWords: _CommandName[139:155],
-	CommandRandomWriteBits:  _CommandName[155:170],
-	CommandRemoteUnlock:     _CommandName[170:182],
-	CommandRemoteLock:       _CommandName[182:192],
-	CommandEchoTest:         _CommandName[192:200],
+	CommandRandomRead:       _CommandName[38:48],
+	CommandRemoteRun:        _CommandName[48:57],
+	CommandRemoteStop:       _CommandName[57:67],
+	CommandRemotePause:      _CommandName[67:78],
+	CommandRemoteLatchClear: _CommandName[78:94],
+	CommandRemoteReset:      _CommandName[94:105],
+	CommandBatchWriteWords:  _CommandName[105:120],
+	CommandBatchWriteBits:   _CommandName[120:134],
+	CommandRandomWrite:      _CommandName[134:145],
+	CommandRandomWriteBits:  _CommandName[145:160],
+	CommandRemoteUnlock:     _CommandName[160:172],
+	CommandRemoteLock:       _CommandName[172:182],
+	CommandEchoTest:         _CommandName[182:190],
 }
 
 // Name is the attribute of Command.
@@ -267,7 +267,7 @@ var _CommandMapCommand = map[Command]uint16{
 	CommandReadCpuType:      257,
 	CommandBatchReadWords:   1025,
 	CommandBatchReadBits:    1025,
-	CommandRandomReadWords:  1027,
+	CommandRandomRead:       1027,
 	CommandRemoteRun:        4097,
 	CommandRemoteStop:       4098,
 	CommandRemotePause:      4099,
@@ -275,7 +275,7 @@ var _CommandMapCommand = map[Command]uint16{
 	CommandRemoteReset:      4102,
 	CommandBatchWriteWords:  5121,
 	CommandBatchWriteBits:   5121,
-	CommandRandomWriteWords: 5122,
+	CommandRandomWrite:      5122,
 	CommandRandomWriteBits:  5122,
 	CommandRemoteUnlock:     5680,
 	CommandRemoteLock:       5681,
@@ -294,7 +294,7 @@ var _CommandMapDefaultSubCommand = map[Command]uint16{
 	CommandReadCpuType:      0,
 	CommandBatchReadWords:   0,
 	CommandBatchReadBits:    1,
-	CommandRandomReadWords:  0,
+	CommandRandomRead:       0,
 	CommandRemoteRun:        0,
 	CommandRemoteStop:       0,
 	CommandRemotePause:      0,
@@ -302,7 +302,7 @@ var _CommandMapDefaultSubCommand = map[Command]uint16{
 	CommandRemoteReset:      0,
 	CommandBatchWriteWords:  0,
 	CommandBatchWriteBits:   1,
-	CommandRandomWriteWords: 0,
+	CommandRandomWrite:      0,
 	CommandRandomWriteBits:  1,
 	CommandRemoteUnlock:     0,
 	CommandRemoteLock:       0,
@@ -341,32 +341,32 @@ var _CommandNameMap = map[string]Command{
 	strings.ToLower(_CommandName[11:25]):   CommandBatchReadWords,
 	_CommandName[25:38]:                    CommandBatchReadBits,
 	strings.ToLower(_CommandName[25:38]):   CommandBatchReadBits,
-	_CommandName[38:53]:                    CommandRandomReadWords,
-	strings.ToLower(_CommandName[38:53]):   CommandRandomReadWords,
-	_CommandName[53:62]:                    CommandRemoteRun,
-	strings.ToLower(_CommandName[53:62]):   CommandRemoteRun,
-	_CommandName[62:72]:                    CommandRemoteStop,
-	strings.ToLower(_CommandName[62:72]):   CommandRemoteStop,
-	_CommandName[72:83]:                    CommandRemotePause,
-	strings.ToLower(_CommandName[72:83]):   CommandRemotePause,
-	_CommandName[83:99]:                    CommandRemoteLatchClear,
-	strings.ToLower(_CommandName[83:99]):   CommandRemoteLatchClear,
-	_CommandName[99:110]:                   CommandRemoteReset,
-	strings.ToLower(_CommandName[99:110]):  CommandRemoteReset,
-	_CommandName[110:125]:                  CommandBatchWriteWords,
-	strings.ToLower(_CommandName[110:125]): CommandBatchWriteWords,
-	_CommandName[125:139]:                  CommandBatchWriteBits,
-	strings.ToLower(_CommandName[125:139]): CommandBatchWriteBits,
-	_CommandName[139:155]:                  CommandRandomWriteWords,
-	strings.ToLower(_CommandName[139:155]): CommandRandomWriteWords,
-	_CommandName[155:170]:                  CommandRandomWriteBits,
-	strings.ToLower(_CommandName[155:170]): CommandRandomWriteBits,
-	_CommandName[170:182]:                  CommandRemoteUnlock,
-	strings.ToLower(_CommandName[170:182]): CommandRemoteUnlock,
-	_CommandName[182:192]:                  CommandRemoteLock,
-	strings.ToLower(_CommandName[182:192]): CommandRemoteLock,
-	_CommandName[192:200]:                  CommandEchoTest,
-	strings.ToLower(_CommandName[192:200]): CommandEchoTest,
+	_CommandName[38:48]:                    CommandRandomRead,
+	strings.ToLower(_CommandName[38:48]):   CommandRandomRead,
+	_CommandName[48:57]:                    CommandRemoteRun,
+	strings.ToLower(_CommandName[48:57]):   CommandRemoteRun,
+	_CommandName[57:67]:                    CommandRemoteStop,
+	strings.ToLower(_CommandName[57:67]):   CommandRemoteStop,
+	_CommandName[67:78]:                    CommandRemotePause,
+	strings.ToLower(_CommandName[67:78]):   CommandRemotePause,
+	_CommandName[78:94]:                    CommandRemoteLatchClear,
+	strings.ToLower(_CommandName[78:94]):   CommandRemoteLatchClear,
+	_CommandName[94:105]:                   CommandRemoteReset,
+	strings.ToLower(_CommandName[94:105]):  CommandRemoteReset,
+	_CommandName[105:120]:                  CommandBatchWriteWords,
+	strings.ToLower(_CommandName[105:120]): CommandBatchWriteWords,
+	_CommandName[120:134]:                  CommandBatchWriteBits,
+	strings.ToLower(_CommandName[120:134]): CommandBatchWriteBits,
+	_CommandName[134:145]:                  CommandRandomWrite,
+	strings.ToLower(_CommandName[134:145]): CommandRandomWrite,
+	_CommandName[145:160]:                  CommandRandomWriteBits,
+	strings.ToLower(_CommandName[145:160]): CommandRandomWriteBits,
+	_CommandName[160:172]:                  CommandRemoteUnlock,
+	strings.ToLower(_CommandName[160:172]): CommandRemoteUnlock,
+	_CommandName[172:182]:                  CommandRemoteLock,
+	strings.ToLower(_CommandName[172:182]): CommandRemoteLock,
+	_CommandName[182:190]:                  CommandEchoTest,
+	strings.ToLower(_CommandName[182:190]): CommandEchoTest,
 }
 
 // ParseCommand converts a string to a Command.

@@ -12,7 +12,7 @@ Command : command code
 		ReadCpuType		 (0x0101, 0x0000)
 		BatchReadWords   (0x0401, 0x0000)
 		BatchReadBits    (0x0401, 0x0001)
-		RandomReadWords  (0x0403, 0x0000)
+		RandomRead       (0x0403, 0x0000)
 		RemoteRun   	 (0x1001, 0x0000)
 		RemoteStop  	 (0x1002, 0x0000)
 		RemotePause 	 (0x1003, 0x0000)
@@ -20,7 +20,7 @@ Command : command code
 		RemoteReset		 (0x1006, 0x0000)
 		BatchWriteWords  (0x1401, 0x0000)
 		BatchWriteBits   (0x1401, 0x0001)
-		RandomWriteWords (0x1402, 0x0000)
+		RandomWrite      (0x1402, 0x0000)
 		RandomWriteBits  (0x1402, 0x0001)
 		RemoteUnlock	 (0x1630, 0x0000)
 		RemoteLock		 (0x1631, 0x0000)
@@ -32,7 +32,7 @@ type Command int16
 func (c Command) SubCommand(plcType PlcType) uint16 {
 	if plcType == PlcTypeIQr {
 		switch c {
-		case CommandBatchReadWords, CommandBatchWriteWords, CommandRandomReadWords, CommandRandomWriteWords:
+		case CommandBatchReadWords, CommandBatchWriteWords, CommandRandomRead, CommandRandomWrite:
 			return 0x0002
 		case CommandBatchReadBits, CommandBatchWriteBits, CommandRandomWriteBits:
 			return 0x0003

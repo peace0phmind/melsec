@@ -12,6 +12,10 @@ import (
 	"strconv"
 )
 
+var (
+	AddressesAndValuesMustBeSameLength = errors.New("addresses and values must be same length")
+)
+
 type type3E struct {
 	log.InnerLog
 	transporter   *Transporter
@@ -309,7 +313,7 @@ func (t *type3E) writeDeviceData(w io.Writer, deviceAddress *DeviceAddress) erro
 
 func (t *type3E) RandomRead(wordDevices, dwordDevices []*DeviceAddress) ([]uint16, []uint32, error) {
 	var requestData bytes.Buffer
-	if err := t.writeCommandData(&requestData, CommandRandomReadWords.Command(), CommandRandomReadWords.SubCommand(t.plcType)); err != nil {
+	if err := t.writeCommandData(&requestData, CommandRandomRead.Command(), CommandRandomRead.SubCommand(t.plcType)); err != nil {
 		return nil, nil, err
 	}
 
@@ -363,17 +367,176 @@ func (t *type3E) RandomRead(wordDevices, dwordDevices []*DeviceAddress) ([]uint1
 }
 
 func (t *type3E) BatchWriteBits(deviceAddress *DeviceAddress, values []byte) error {
+	req, err := t.makeCommandData(CommandBatchWriteBits, deviceAddress, int16(len(values)))
+	if err != nil {
+		t.L.Warn(err)
+		return err
+	}
+
+	if t.commType == CommTypeBinary {
+		bitData := make([]byte, (len(values)+1)/2)
+		for idx, value := range values {
+			valueIndex := idx / 2
+			var bitIndex uint
+			if idx%2 == 0 {
+				bitIndex = 4
+			} else {
+				bitIndex = 0
+			}
+
+			bitValue := value << bitIndex
+			bitData[valueIndex] |= bitValue
+		}
+
+		req = append(req, bitData...)
+	} else {
+		for _, value := range values {
+			req = append(req, []byte(strconv.Itoa(int(value)))...)
+		}
+	}
+
+	req = t.makeSendData(req)
+
+	_, err = t.transporter.Send(req, 0)
+	if err != nil {
+		t.L.Warn(err)
+		return err
+	}
+
 	return nil
 }
 
 func (t *type3E) BatchWriteWords(deviceAddress *DeviceAddress, values []uint16) error {
+	req, err := t.makeCommandData(CommandBatchWriteWords, deviceAddress, int16(len(values)))
+	if err != nil {
+		t.L.Warn(err)
+		return err
+	}
+
+	for _, value := range values {
+		data, err := t.encodeValue(value)
+		if err != nil {
+			return err
+		}
+		req = append(req, data...)
+	}
+
+	req = t.makeSendData(req)
+
+	_, err = t.transporter.Send(req, 0)
+	if err != nil {
+		t.L.Warn(err)
+		return err
+	}
+
 	return nil
 }
 
 func (t *type3E) RandomWriteBits(bitDevices []*DeviceAddress, values []byte) error {
+	if len(bitDevices) != len(values) {
+		return AddressesAndValuesMustBeSameLength
+	}
+
+	var requestData bytes.Buffer
+	if err := t.writeCommandData(&requestData, CommandRandomWriteBits.Command(), CommandRandomWriteBits.SubCommand(t.plcType)); err != nil {
+		return err
+	}
+
+	// write value len
+	if err := t.writeValue(&requestData, byte(len(values))); err != nil {
+		return err
+	}
+
+	for i, value := range values {
+		bitDevice := bitDevices[i]
+		err := t.writeDeviceData(&requestData, bitDevice)
+		if err != nil {
+			return err
+		}
+
+		if t.plcType == PlcTypeIQr {
+			err = t.writeValue(&requestData, uint16(value))
+		} else {
+			err = t.writeValue(&requestData, value)
+		}
+		if err != nil {
+			return err
+		}
+	}
+
+	req := requestData.Bytes()
+
+	req = t.makeSendData(req)
+
+	_, err := t.transporter.Send(req, 0)
+	if err != nil {
+		t.L.Warn(err)
+		return err
+	}
+
 	return nil
 }
 
 func (t *type3E) RandomWrite(wordDevices []*DeviceAddress, wordValues []uint16, dwordDevices []*DeviceAddress, dwordValues []uint32) error {
+	if len(wordDevices) != len(wordValues) {
+		return AddressesAndValuesMustBeSameLength
+	}
+
+	if len(dwordDevices) != len(dwordValues) {
+		return AddressesAndValuesMustBeSameLength
+	}
+
+	wordSize := len(wordDevices)
+	dwordSize := len(dwordDevices)
+
+	var requestData bytes.Buffer
+	if err := t.writeCommandData(&requestData, CommandRandomWrite.Command(), CommandRandomWrite.SubCommand(t.plcType)); err != nil {
+		return err
+	}
+
+	err := t.writeValue(&requestData, byte(wordSize))
+	if err != nil {
+		return err
+	}
+
+	err = t.writeValue(&requestData, byte(dwordSize))
+	if err != nil {
+		return err
+	}
+
+	for i, value := range wordValues {
+		err = t.writeDeviceData(&requestData, wordDevices[i])
+		if err != nil {
+			return err
+		}
+
+		err = t.writeValue(&requestData, value)
+		if err != nil {
+			return err
+		}
+	}
+
+	for i, value := range dwordDevices {
+		err = t.writeDeviceData(&requestData, dwordDevices[i])
+		if err != nil {
+			return err
+		}
+
+		err = t.writeValue(&requestData, value)
+		if err != nil {
+			return err
+		}
+	}
+
+	req := requestData.Bytes()
+
+	req = t.makeSendData(req)
+
+	_, err = t.transporter.Send(req, 0)
+	if err != nil {
+		t.L.Warn(err)
+		return err
+	}
+
 	return nil
 }
