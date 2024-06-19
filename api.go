@@ -1,10 +1,5 @@
 package melsec
 
-type CpuInfo struct {
-	CpuType string
-	CpuCode int
-}
-
 type Type3E interface {
 	BatchReadBits(deviceAddress *DeviceAddress, readSize int16) ([]byte, error)
 
@@ -19,6 +14,4 @@ type Type3E interface {
 	RandomWriteBits(bitDevices []*DeviceAddress, values []byte) error
 
 	RandomWrite(wordDevices []*DeviceAddress, wordValues []uint16, dwordDevices []*DeviceAddress, dwordValues []uint32) error
-
-	CpuInfo() (*CpuInfo, error)
 }
