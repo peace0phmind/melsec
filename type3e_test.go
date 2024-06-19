@@ -5,8 +5,18 @@ import (
 	"fmt"
 	"github.com/expgo/factory"
 	"github.com/stretchr/testify/assert"
+	"math/rand"
 	"testing"
+	"time"
 )
+
+var t3e Type3E
+
+func init() {
+	transporter := NewTransporter(fmt.Sprintf("%s:%d", "192.168.1.232", 1025))
+	_ = transporter.Connect()
+	t3e = NewType3E(transporter)
+}
 
 func TestEncodeValue(t *testing.T) {
 	t3e := factory.New[type3E]()
@@ -195,10 +205,6 @@ func TestMakeSendData(t *testing.T) {
 }
 
 func TestRemote(t *testing.T) {
-	transporter := NewTransporter(fmt.Sprintf("%s:%d", "127.0.0.1", 2025))
-	_ = transporter.Connect()
-
-	t3e := NewType3E(transporter)
 	ret, err := t3e.BatchReadWords(NewDeviceAddress(DeviceD, 0), 1)
 	assert.NoError(t, err)
 	assert.Equal(t, uint16(23), ret[0])
@@ -210,9 +216,54 @@ func TestRemote(t *testing.T) {
 	bitValues, err := t3e.BatchReadBits(NewDeviceAddress(DeviceF, 0), 2)
 	assert.NoError(t, err)
 	assert.Equal(t, []byte{0x1, 0x0}, bitValues)
+}
 
-	err = t3e.BatchWriteBits(NewDeviceAddress(DeviceX, 0), []byte{0x0, 0x1})
+func TestBatchWriteBitsAndCheck(t *testing.T) {
+	err := t3e.BatchWriteBits(NewDeviceAddress(DeviceY, 0), []byte{0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0})
 	assert.NoError(t, err)
-	bitValues, err = t3e.BatchReadBits(NewDeviceAddress(DeviceX, 0), 2)
-	assert.Equal(t, []byte{0x0, 0x1}, bitValues)
+
+	bitValues, err := t3e.BatchReadBits(NewDeviceAddress(DeviceY, 0), 16)
+	assert.Equal(t, []byte{0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0}, bitValues)
+}
+
+func TestBatchWriteAndCheck(t *testing.T) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	var words []uint16
+	for i := 0; i < 16; i++ {
+		words = append(words, uint16(r.Intn(65536)))
+	}
+
+	addr := NewDeviceAddress(DeviceD, 10)
+
+	err := t3e.BatchWriteWords(addr, words)
+	assert.NoError(t, err)
+
+	wordValues, err := t3e.BatchReadWords(addr, 16)
+	assert.Equal(t, words, wordValues)
+}
+
+func TestRandomWriteAndRead(t *testing.T) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	var words []uint16
+	var wordAdds []*DeviceAddress
+	for i := 0; i < 16; i++ {
+		words = append(words, uint16(r.Intn(65536)))
+		wordAdds = append(wordAdds, NewDeviceAddress(DeviceD, 10+i))
+	}
+
+	var dwords []uint32
+	var dwordAdds []*DeviceAddress
+	for i := 0; i < 16; i++ {
+		dwords = append(dwords, r.Uint32())
+		dwordAdds = append(dwordAdds, NewDeviceAddress(DeviceD, 30+i*2))
+	}
+
+	err := t3e.RandomWrite(wordAdds, words, dwordAdds, dwords)
+	assert.NoError(t, err)
+
+	wordValues, dwordValues, err := t3e.RandomRead(wordAdds, dwordAdds)
+	assert.Equal(t, words, wordValues)
+	assert.Equal(t, dwords, dwordValues)
 }

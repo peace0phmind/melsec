@@ -516,7 +516,7 @@ func (t *type3E) RandomWrite(wordDevices []*DeviceAddress, wordValues []uint16, 
 		}
 	}
 
-	for i, value := range dwordDevices {
+	for i, value := range dwordValues {
 		err = t.writeDeviceData(&requestData, dwordDevices[i])
 		if err != nil {
 			return err
@@ -539,4 +539,21 @@ func (t *type3E) RandomWrite(wordDevices []*DeviceAddress, wordValues []uint16, 
 	}
 
 	return nil
+}
+
+func (t *type3E) CpuInfo() (*CpuInfo, error) {
+	var requestData bytes.Buffer
+	if err := t.writeCommandData(&requestData, CommandReadCpuType.Command(), CommandReadCpuType.SubCommand(t.plcType)); err != nil {
+		return nil, err
+	}
+
+	req := t.makeSendData(requestData.Bytes())
+
+	_, err := t.transporter.Send(req, 16+4*int(t.commType.WordSize()))
+	if err != nil {
+		t.L.Warn(err)
+		return nil, err
+	}
+
+	return nil, nil
 }
