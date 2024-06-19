@@ -473,6 +473,43 @@ func (x Device) Code() int {
 	return 0
 }
 
+var _DeviceMapIsBit = map[Device]bool{
+	DeviceSm: true,
+	DeviceSd: false,
+	DeviceX:  true,
+	DeviceY:  true,
+	DeviceM:  true,
+	DeviceL:  true,
+	DeviceF:  true,
+	DeviceV:  true,
+	DeviceB:  true,
+	DeviceD:  false,
+	DeviceW:  false,
+	DeviceTs: true,
+	DeviceTc: true,
+	DeviceTn: false,
+	DeviceSs: true,
+	DeviceSc: true,
+	DeviceSn: false,
+	DeviceCs: true,
+	DeviceCc: true,
+	DeviceCn: false,
+	DeviceSb: true,
+	DeviceSw: false,
+	DeviceDx: true,
+	DeviceDy: true,
+	DeviceR:  false,
+	DeviceZr: false,
+}
+
+// IsBit is the attribute of Device.
+func (x Device) IsBit() bool {
+	if v, ok := _DeviceMapIsBit[x]; ok {
+		return v
+	}
+	return false
+}
+
 // Val is the attribute of Device.
 func (x Device) Val() int {
 	return int(x)

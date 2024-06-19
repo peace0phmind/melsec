@@ -218,7 +218,7 @@ func TestRemote(t *testing.T) {
 	assert.Equal(t, []byte{0x1, 0x0}, bitValues)
 }
 
-func TestBatchWriteBitsAndCheck(t *testing.T) {
+func TestBatchWriteBits(t *testing.T) {
 	err := t3e.BatchWriteBits(NewDeviceAddress(DeviceY, 0), []byte{0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0})
 	assert.NoError(t, err)
 
@@ -226,7 +226,7 @@ func TestBatchWriteBitsAndCheck(t *testing.T) {
 	assert.Equal(t, []byte{0x1, 0x0, 0x1, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x1, 0x0, 0x0, 0x0, 0x0, 0x1, 0x0}, bitValues)
 }
 
-func TestBatchWriteAndCheck(t *testing.T) {
+func TestBatchWrite(t *testing.T) {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	var words []uint16
@@ -243,7 +243,7 @@ func TestBatchWriteAndCheck(t *testing.T) {
 	assert.Equal(t, words, wordValues)
 }
 
-func TestRandomWriteAndRead(t *testing.T) {
+func TestRandomWrite(t *testing.T) {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 
 	var words []uint16
