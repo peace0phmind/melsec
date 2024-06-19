@@ -267,3 +267,21 @@ func TestRandomWriteAndRead(t *testing.T) {
 	assert.Equal(t, words, wordValues)
 	assert.Equal(t, dwords, dwordValues)
 }
+
+func TestRandomWriteBits(t *testing.T) {
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+
+	bitDevices := []*DeviceAddress{}
+	var values []byte
+	for i := 0; i < 16; i++ {
+		values = append(values, byte(r.Intn(2)))
+		bitDevices = append(bitDevices, NewDeviceAddress(DeviceY, 10+i))
+	}
+
+	err := t3e.RandomWriteBits(bitDevices, values)
+	assert.NoError(t, err)
+
+	bitValues, err := t3e.BatchReadBits(NewDeviceAddress(DeviceY, 10), 16)
+	assert.NoError(t, err)
+	assert.Equal(t, values, bitValues)
+}
